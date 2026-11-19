@@ -107,7 +107,7 @@ fun ReaderScreen(id: Long, autoplay: Boolean, onBack: () -> Unit, openPlayer: ()
     val repo = app.repo
     val scope = rememberCoroutineScope()
     val article by repo.observe(id).collectAsState(initial = null)
-    val settings by app.settings.flow.collectAsState(initial = null)
+    val appSettings by app.settings.flow.collectAsState(initial = null)
     val play by Playback.state.collectAsState()
     val systemDark = isSystemInDarkTheme()
     var chrome by remember { mutableStateOf(true) }
@@ -120,7 +120,7 @@ fun ReaderScreen(id: Long, autoplay: Boolean, onBack: () -> Unit, openPlayer: ()
     var autoplayDone by remember { mutableStateOf(false) }
     val isThisPlaying = play.article?.id == id
     val a = article
-    val s = settings
+    val s = appSettings
 
     // Nạp nội dung khi bài sẵn sàng
     LaunchedEffect(a?.status, s?.readCaptions) {

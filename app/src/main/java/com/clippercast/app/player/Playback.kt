@@ -149,7 +149,7 @@ object Playback {
             compareBy<Voice>({ it.isNetworkConnectionRequired }, { -it.quality })
         ).firstOrNull()
         if (chosen != null) {
-            t.voice = chosen
+            t.setVoice(chosen)
             return true to chosen.name
         }
         if (settings.privacyMax && all.isNotEmpty()) return false to null
