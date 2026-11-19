@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut android:shortcutId="resume" android:enabled="true"
+        android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="@string/shortcut_resume">
+        <intent android:action="com.clippercast.app.RESUME"
+            android:targetPackage="com.clippercast.app"
+            android:targetClass="com.clippercast.app.MainActivity" />
+    </shortcut>
+    <shortcut android:shortcutId="paste" android:enabled="true"
+        android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="@string/shortcut_paste">
+        <intent android:action="com.clippercast.app.PASTE"
+            android:targetPackage="com.clippercast.app"
+            android:targetClass="com.clippercast.app.MainActivity" />
+    </shortcut>
+    <shortcut android:shortcutId="search" android:enabled="true"
+        android:icon="@mipmap/ic_launcher" android:shortcutShortLabel="@string/shortcut_search">
+        <intent android:action="com.clippercast.app.SEARCH"
+            android:targetPackage="com.clippercast.app"
+            android:targetClass="com.clippercast.app.MainActivity" />
+    </shortcut>
+</shortcuts>

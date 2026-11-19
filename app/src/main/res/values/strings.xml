@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">ClipperCast</string>
+    <string name="share_save">ClipperCast · Lưu</string>
+    <string name="share_listen">ClipperCast · Nghe ngay</string>
+    <string name="shortcut_resume">Tiếp tục nghe</string>
+    <string name="shortcut_paste">Dán link</string>
+    <string name="shortcut_search">Tìm kiếm</string>
+</resources>

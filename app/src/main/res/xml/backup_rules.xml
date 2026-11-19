@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android Auto Backup: chỉ sao lưu cơ sở dữ liệu và cài đặt, không gồm ảnh (giới hạn 25 MB). -->
+<full-backup-content>
+    <include domain="database" path="." />
+    <include domain="file" path="datastore/" />
+</full-backup-content>
