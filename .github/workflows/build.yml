@@ -20,7 +20,8 @@ jobs:
           java-version: 17
       - uses: gradle/actions/setup-gradle@v4
       - name: Build debug and release APK
-        run: ./gradlew assembleDebug assembleRelease --stacktrace
+        # Chạy riêng từng biến thể: KSP của Room ghi cùng một file schema, chạy song song dễ hỏng file
+        run: ./gradlew assembleRelease --stacktrace && ./gradlew assembleDebug --stacktrace
       - name: Rename APKs
         run: |
           mkdir -p out
