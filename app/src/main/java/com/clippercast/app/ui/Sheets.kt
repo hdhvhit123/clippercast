@@ -19,7 +19,7 @@ import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Headphones
-import androidx.compose.material.icons.outlined.Login
+import androidx.compose.material.icons.automirrored.outlined.Login
 import androidx.compose.material.icons.outlined.QueuePlayNext
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Unarchive
@@ -79,7 +79,7 @@ fun ArticleActionSheet(a: Article, actions: ArticleActions, nav: HomeNav, onDism
                 SheetItem(Icons.Outlined.Refresh, "Thử tải lại") { go { actions.retry(a) } }
             }
             if (!a.isNote && a.url.isNotBlank() && a.status != ClipStatus.READY) {
-                SheetItem(Icons.Outlined.Login, "Mở trong app để đăng nhập rồi lưu") { go { nav.browser(a.id) } }
+                SheetItem(Icons.AutoMirrored.Outlined.Login, "Mở trong app để đăng nhập rồi lưu") { go { nav.browser(a.id) } }
             }
             SheetItem(Icons.Outlined.FavoriteBorder, if (a.favorite) "Bỏ yêu thích" else "Yêu thích") { go { actions.favorite(a) } }
             if (a.archived) SheetItem(Icons.Outlined.Unarchive, "Đưa về Hộp thư") { go { actions.unarchive(a) } }

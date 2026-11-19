@@ -34,7 +34,6 @@ class ShareActivity : Activity() {
             return
         }
         finish()
-        overridePendingTransition(0, 0)
 
         app.scope.launch {
             val res = runCatching { app.repo.saveShared(text, subject) }.getOrNull()

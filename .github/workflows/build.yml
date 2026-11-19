@@ -6,6 +6,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,9 +21,25 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Build debug and release APK
         run: ./gradlew assembleDebug assembleRelease --stacktrace
+      - name: Rename APKs
+        run: |
+          mkdir -p out
+          cp app/build/outputs/apk/release/app-release.apk out/ClipperCast.apk
+          cp app/build/outputs/apk/debug/app-debug.apk out/ClipperCast-debug.apk
       - uses: actions/upload-artifact@v4
         with:
           name: clippercast-apk
-          path: |
-            app/build/outputs/apk/debug/*.apk
-            app/build/outputs/apk/release/*.apk
+          path: out/*.apk
+      # Bản cài thử mới nhất: tải thẳng trên điện thoại ở trang Releases
+      - name: Publish "latest" pre-release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: ClipperCast (bản cài thử mới nhất)
+          prerelease: true
+          make_latest: false
+          body: |
+            Bản build tự động từ commit ${{ github.sha }}.
+            Tải **ClipperCast.apk** và cài trên Android 8.0 trở lên (cần cho phép "Cài ứng dụng không rõ nguồn gốc").
+          files: out/*.apk
