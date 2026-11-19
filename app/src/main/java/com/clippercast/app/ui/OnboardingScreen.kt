@@ -1,5 +1,8 @@
 package com.clippercast.app.ui
 
+import com.clippercast.app.tr
+import com.clippercast.app.R
+
 import android.Manifest
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -51,6 +54,8 @@ fun OnboardingScreen(onDone: (sampleId: Long?) -> Unit) {
     val scope = rememberCoroutineScope()
     val pager = rememberPagerState { 3 }
     var voiceStatus by remember { mutableStateOf<String?>(null) }
+    val deviceLang = remember { java.util.Locale.getDefault().language }
+    val langName = remember { langDisplayName(deviceLang) }
     val notifLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
     fun finish(sample: Boolean) = scope.launch {
@@ -62,7 +67,7 @@ fun OnboardingScreen(onDone: (sampleId: Long?) -> Unit) {
     Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
         Row(Modifier.fillMaxWidth().padding(8.dp)) {
             Spacer(Modifier.weight(1f))
-            TextButton(onClick = { finish(false) }) { Text("Bỏ qua") }
+            TextButton(onClick = { finish(false) }) { Text(tr(R.string.skip)) }
         }
         HorizontalPager(pager, Modifier.weight(1f)) { page ->
             Column(
@@ -71,36 +76,36 @@ fun OnboardingScreen(onDone: (sampleId: Long?) -> Unit) {
             ) {
                 when (page) {
                     0 -> {
-                        Illustration("Chrome  →  ⋮  →  Chia sẻ  →  ClipperCast")
-                        Title("Lưu mọi bài đọc từ Chrome")
-                        Body("Đang đọc dở một bài? Bấm Chia sẻ rồi chọn ClipperCast. Bài được lưu ngay, bạn lướt web tiếp mà không bị gián đoạn.")
+                        Illustration(tr(R.string.ob1_art))
+                        Title(tr(R.string.ob1_title))
+                        Body(tr(R.string.ob1_body))
                     }
                     1 -> {
-                        Illustration("📰  Đọc sạch    🎧  Nghe như podcast")
-                        Title("Đọc sạch, nghe offline")
-                        Body("Quảng cáo và pop-up được lược bỏ. Bài và ảnh nằm trong máy, đọc và nghe được cả khi không có mạng. Không cần tài khoản.")
+                        Illustration(tr(R.string.ob2_art))
+                        Title(tr(R.string.ob2_title))
+                        Body(tr(R.string.ob2_body))
                         Spacer(Modifier.height(16.dp))
-                        Button(onClick = { finish(true) }) { Text("Thử ngay với bài mẫu") }
+                        Button(onClick = { finish(true) }) { Text(tr(R.string.try_sample_now)) }
                     }
                     else -> {
                         Illustration("🔔  🗣️")
-                        Title("Hai bước chuẩn bị nhỏ")
-                        Body("Cho phép thông báo để biết khi bài đã tải xong. Kiểm tra giọng đọc tiếng Việt offline trên máy.")
+                        Title(tr(R.string.ob3_title))
+                        Body(tr(R.string.ob3_body, langName))
                         Spacer(Modifier.height(16.dp))
                         if (Build.VERSION.SDK_INT >= 33) {
-                            OutlinedButton(onClick = { notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) }) { Text("Cho phép thông báo") }
+                            OutlinedButton(onClick = { notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS) }) { Text(tr(R.string.allow_notifications)) }
                         }
                         OutlinedButton(onClick = {
-                            voiceStatus = "Đang kiểm tra…"
-                            Playback.voicesFor("vi") { list ->
+                            voiceStatus = tr(R.string.checking)
+                            Playback.voicesFor(deviceLang) { list ->
                                 val offline = list.filter { !it.isNetworkConnectionRequired }
                                 voiceStatus = when {
-                                    offline.isNotEmpty() -> "✓ Máy đã có ${offline.size} giọng tiếng Việt offline."
-                                    list.isNotEmpty() -> "Máy chỉ có giọng tiếng Việt cần mạng. Hãy tải giọng offline trong Cài đặt → Chuyển văn bản thành giọng nói."
-                                    else -> "Máy chưa có giọng tiếng Việt. Hãy tải trong Cài đặt → Chuyển văn bản thành giọng nói."
+                                    offline.isNotEmpty() -> tr(R.string.voice_ok, offline.size, langName)
+                                    list.isNotEmpty() -> tr(R.string.voice_online_only, langName)
+                                    else -> tr(R.string.voice_none, langName)
                                 }
                             }
-                        }) { Text("Kiểm tra giọng đọc") }
+                        }) { Text(tr(R.string.check_voice)) }
                         voiceStatus?.let { Text(it, Modifier.padding(top = 8.dp), textAlign = TextAlign.Center, style = MaterialTheme.typography.bodyMedium) }
                     }
                 }
@@ -116,7 +121,7 @@ fun OnboardingScreen(onDone: (sampleId: Long?) -> Unit) {
             Spacer(Modifier.weight(1f))
             Button(onClick = {
                 if (pager.currentPage < 2) scope.launch { pager.animateScrollToPage(pager.currentPage + 1) } else finish(false)
-            }) { Text(if (pager.currentPage < 2) "Tiếp" else "Bắt đầu") }
+            }) { Text(if (pager.currentPage < 2) tr(R.string.next) else tr(R.string.get_started)) }
         }
     }
 }

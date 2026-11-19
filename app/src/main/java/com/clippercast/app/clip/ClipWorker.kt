@@ -1,5 +1,8 @@
 package com.clippercast.app.clip
 
+import com.clippercast.app.tr
+import com.clippercast.app.R
+
 import android.content.Context
 import android.net.ConnectivityManager
 import androidx.work.BackoffPolicy
@@ -36,7 +39,7 @@ class ClipWorker(context: Context, params: WorkerParameters) : CoroutineWorker(c
         if (UrlNormalizer.isLinkOnlyHost(article.url)) {
             val title = runCatching { withContext(Dispatchers.IO) { FastExtractor.fetchAndExtract(article.url).title } }.getOrNull()
             repo.update(article.copy(status = ClipStatus.LINK_ONLY, title = title ?: article.title,
-                error = "Video và mạng xã hội được lưu dưới dạng link."))
+                error = tr(R.string.err_video)))
             return Result.success()
         }
 
@@ -50,7 +53,7 @@ class ClipWorker(context: Context, params: WorkerParameters) : CoroutineWorker(c
             return Result.success()
         } catch (e: UnknownHostException) {
             // Không có mạng: giữ trạng thái chờ, thử lại sau
-            repo.update(article.copy(status = ClipStatus.PENDING, error = "Đã lưu link. Sẽ tự tải khi có mạng."))
+            repo.update(article.copy(status = ClipStatus.PENDING, error = tr(R.string.err_offline)))
             return if (runAttemptCount < 5) Result.retry() else Result.success()
         } catch (e: Throwable) {
             failure = e
@@ -101,7 +104,7 @@ class ClipWorker(context: Context, params: WorkerParameters) : CoroutineWorker(c
             excerpt = (raw.excerpt ?: fin.text.take(200)).take(300),
             thumb = fin.thumb,
             status = fin.status,
-            error = if (fin.status == ClipStatus.PARTIAL) "Trang này có thể cần đăng nhập để xem toàn bộ." else null,
+            error = if (fin.status == ClipStatus.PARTIAL) tr(R.string.err_partial) else null,
             sizeBytes = fin.sizeBytes,
         )
         repo.update(updated)
@@ -116,14 +119,14 @@ class ClipWorker(context: Context, params: WorkerParameters) : CoroutineWorker(c
 
     private fun reasonFor(e: Throwable?): String = when (e) {
         is HttpStatusException -> when (e.code) {
-            401, 402, 403 -> "Trang này cần đăng nhập hoặc chặn truy cập tự động. Hãy mở trang trong app để đăng nhập, hoặc dán văn bản."
-            404, 410 -> "Không tìm thấy trang (lỗi ${e.code})."
-            429 -> "Trang đang giới hạn truy cập. Hãy thử lại sau."
-            in 500..599 -> "Máy chủ của trang đang gặp lỗi (${e.code}). Hãy thử lại sau."
-            else -> "Trang trả về lỗi ${e.code}."
+            401, 402, 403 -> tr(R.string.err_login)
+            404, 410 -> tr(R.string.err_not_found, e.code)
+            429 -> tr(R.string.err_rate_limited)
+            in 500..599 -> tr(R.string.err_server, e.code)
+            else -> tr(R.string.err_http, e.code)
         }
-        is SocketTimeoutException, is InterruptedIOException -> "Trang phản hồi quá chậm."
-        else -> "Không tìm thấy nội dung bài viết trên trang này. Bạn có thể xem bản gốc hoặc dán văn bản."
+        is SocketTimeoutException, is InterruptedIOException -> tr(R.string.err_timeout)
+        else -> tr(R.string.err_no_content)
     }
 
     companion object {

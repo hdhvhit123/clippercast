@@ -1,5 +1,8 @@
 package com.clippercast.app.ui
 
+import com.clippercast.app.tr
+import com.clippercast.app.R
+
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -41,19 +44,19 @@ fun TrashScreen(onBack: () -> Unit) {
     var confirm by remember { mutableStateOf(false) }
     Scaffold(topBar = {
         TopAppBar(
-            title = { Text("Thùng rác") },
-            navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Quay lại") } },
-            actions = { if (items.isNotEmpty()) TextButton(onClick = { confirm = true }) { Text("Dọn sạch") } },
+            title = { Text(tr(R.string.trash)) },
+            navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, tr(R.string.back)) } },
+            actions = { if (items.isNotEmpty()) TextButton(onClick = { confirm = true }) { Text(tr(R.string.empty_trash)) } },
         )
     }) { pad ->
         if (items.isEmpty()) {
-            Row(Modifier.padding(pad)) { EmptyState("🗑️", "Thùng rác trống", "Bài đã xóa được giữ ở đây 30 ngày trước khi xóa hẳn.") }
+            Row(Modifier.padding(pad)) { EmptyState("🗑️", tr(R.string.trash_empty_title), tr(R.string.trash_empty_body)) }
         } else LazyColumn(Modifier.padding(pad).fillMaxSize()) {
             items(items, key = { it.id }) { a ->
                 ArticleCard(a, compact = true, speed = 1f, onClick = {}, onLongClick = {}, trailing = {
                     Row {
-                        IconButton(onClick = { scope.launch { app.repo.restore(a.id) } }) { Icon(Icons.Outlined.RestoreFromTrash, "Khôi phục") }
-                        IconButton(onClick = { scope.launch { app.repo.deleteForever(a.id) } }) { Icon(Icons.Outlined.DeleteForever, "Xóa vĩnh viễn") }
+                        IconButton(onClick = { scope.launch { app.repo.restore(a.id) } }) { Icon(Icons.Outlined.RestoreFromTrash, tr(R.string.restore_item)) }
+                        IconButton(onClick = { scope.launch { app.repo.deleteForever(a.id) } }) { Icon(Icons.Outlined.DeleteForever, tr(R.string.delete_forever)) }
                     }
                 })
                 HorizontalDivider(Modifier.padding(horizontal = 16.dp))
@@ -62,9 +65,9 @@ fun TrashScreen(onBack: () -> Unit) {
     }
     if (confirm) AlertDialog(
         onDismissRequest = { confirm = false },
-        title = { Text("Xóa vĩnh viễn ${items.size} bài?") },
-        text = { Text("Không thể hoàn tác thao tác này.") },
-        confirmButton = { TextButton(onClick = { confirm = false; scope.launch { app.repo.emptyTrash() } }) { Text("Xóa vĩnh viễn") } },
-        dismissButton = { TextButton(onClick = { confirm = false }) { Text("Hủy") } },
+        title = { Text(tr(R.string.delete_forever_q, items.size)) },
+        text = { Text(tr(R.string.cannot_undo)) },
+        confirmButton = { TextButton(onClick = { confirm = false; scope.launch { app.repo.emptyTrash() } }) { Text(tr(R.string.delete_forever)) } },
+        dismissButton = { TextButton(onClick = { confirm = false }) { Text(tr(R.string.cancel)) } },
     )
 }

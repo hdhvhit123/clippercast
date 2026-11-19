@@ -1,5 +1,8 @@
 package com.clippercast.app.reader
 
+import com.clippercast.app.tr
+import com.clippercast.app.R
+
 import android.content.Context
 import com.clippercast.app.data.AppSettings
 import com.clippercast.app.data.Article
@@ -27,13 +30,13 @@ object ReaderHtml {
     fun build(context: Context, a: Article, bodyHtml: String, s: AppSettings, theme: ReaderTheme): String {
         val meta = buildList {
             add(Entities.escape(a.siteName))
-            if (a.wordCount > 0) add("~${TextUtils.readMinutes(a.wordCount)} phút đọc")
+            if (a.wordCount > 0) add(tr(R.string.min_read, TextUtils.readMinutes(a.wordCount)))
         }.joinToString(" · ")
         val byline = listOfNotNull(a.author?.takeIf { it.isNotBlank() }, a.publishedAt?.take(10)).joinToString(" · ")
         val original = if (a.url.isNotBlank())
-            """<footer><a class="orig" href="${Entities.escape(a.url)}">Xem bản gốc ↗</a></footer>""" else ""
+            """<footer><a class="orig" href="${Entities.escape(a.url)}">${Entities.escape(tr(R.string.view_original_arrow))}</a></footer>""" else ""
         return """<!doctype html>
-<html lang="${a.lang ?: "vi"}"><head>
+<html lang="${a.lang ?: java.util.Locale.getDefault().language}" dir="${if (a.lang in setOf("ar", "fa", "he", "iw", "ur")) "rtl" else "auto"}"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src file: data:; style-src 'unsafe-inline' file:; font-src file:; script-src 'unsafe-inline'">

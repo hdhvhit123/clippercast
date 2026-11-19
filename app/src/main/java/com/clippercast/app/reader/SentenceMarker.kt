@@ -14,7 +14,7 @@ object SentenceMarker {
     data class Marked(val html: String, val sentences: List<String>)
 
     private const val BLOCKS = "p, h1, h2, h3, h4, h5, h6, li, blockquote, figcaption, td, th, dt, dd"
-    private val sentenceEnd = Regex("""(?<=[.!?…。！？])["”’»)\]]*\s+""")
+    private val sentenceEnd = Regex("""(?<=[.!?…।؟])["”’»)\]]*\s+|(?<=[。！？])[”’」』）)]*\s*""")
     private val urlRegex = Regex("""https?://\S+|www\.\S+""")
 
     fun mark(html: String, readCaptions: Boolean, lang: String?): Marked {
@@ -106,7 +106,6 @@ object SentenceMarker {
     }
 
     private fun speakable(s: String, lang: String?): String {
-        val link = if (lang == "vi") "đường link" else "link"
-        return urlRegex.replace(s, link).replace(Regex("\\s+"), " ").trim()
+        return urlRegex.replace(s, "").replace(Regex("\\s+"), " ").trim()
     }
 }

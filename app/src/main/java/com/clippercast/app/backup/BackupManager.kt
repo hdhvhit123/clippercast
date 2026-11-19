@@ -1,5 +1,8 @@
 package com.clippercast.app.backup
 
+import com.clippercast.app.tr
+import com.clippercast.app.R
+
 import android.content.Context
 import android.net.Uri
 import android.util.JsonReader
@@ -155,7 +158,7 @@ object BackupManager {
                 }
             }
         }
-        if (!sawArticles) throw IllegalArgumentException("File sao lưu bị hỏng hoặc không đúng định dạng.")
+        if (!sawArticles) throw IllegalArgumentException(tr(R.string.backup_corrupt))
         // Bài có ảnh thumbnail nhưng không có file ảnh (bản sao lưu không kèm ảnh): bỏ thumbnail
         idMap.values.forEach { id ->
             repo.get(id)?.let { a -> if (a.thumb != null && !File(a.thumb).exists()) repo.update(a.copy(thumb = null)) }

@@ -1,5 +1,8 @@
 package com.clippercast.app.reader
 
+import com.clippercast.app.tr
+import com.clippercast.app.R
+
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -49,7 +52,7 @@ fun DisplaySheet(s: AppSettings, onDismiss: () -> Unit) {
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(Modifier.navigationBarsPadding().padding(horizontal = 20.dp).padding(bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("Bảng màu", style = MaterialTheme.typography.titleSmall)
+            Text(tr(R.string.color_theme), style = MaterialTheme.typography.titleSmall)
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 ReaderTheme.entries.forEach { t ->
                     val sel = s.theme == t
@@ -57,42 +60,42 @@ fun DisplaySheet(s: AppSettings, onDismiss: () -> Unit) {
                         Modifier.size(44.dp).clip(CircleShape).background(Color(t.bg))
                             .border(BorderStroke(if (sel) 3.dp else 1.dp, if (sel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline), CircleShape)
                             .clickable { set { it.copy(theme = t) } }
-                            .semantics { contentDescription = t.label; selected = sel },
+                            .semantics { contentDescription = tr(t.labelRes); selected = sel },
                         contentAlignment = Alignment.Center,
                     ) { Text("Aa", color = Color(t.fg)) }
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Theo giao diện sáng/tối của hệ thống", Modifier.weight(1f))
+                Text(tr(R.string.follow_system), Modifier.weight(1f))
                 Switch(s.followSystem, { v -> set { it.copy(followSystem = v) } })
             }
-            Text("Kiểu chữ", style = MaterialTheme.typography.titleSmall)
+            Text(tr(R.string.font), style = MaterialTheme.typography.titleSmall)
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 ReaderFont.entries.forEach { f ->
-                    FilterChip(s.font == f, { set { it.copy(font = f) } }, label = { Text(f.label) })
+                    FilterChip(s.font == f, { set { it.copy(font = f) } }, label = { Text(f.labelRes?.let { tr(it) } ?: f.label) })
                 }
             }
             if (s.font == ReaderFont.DYSLEXIC) {
-                Text("OpenDyslexic chưa có đủ dấu tiếng Việt; chữ có dấu sẽ hiển thị bằng font hệ thống.",
+                Text(tr(R.string.dyslexic_note),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            Labeled("Cỡ chữ: ${s.fontSize}") {
+            Labeled(tr(R.string.font_size, s.fontSize)) {
                 Slider(s.fontSize.toFloat(), { v -> set { it.copy(fontSize = v.toInt()) } }, valueRange = 14f..32f, steps = 17)
             }
-            Labeled("Khoảng cách dòng: ${"%.1f".format(s.lineHeight)}") {
+            Labeled(tr(R.string.line_height, "%.1f".format(s.lineHeight))) {
                 Slider(s.lineHeight, { v -> set { it.copy(lineHeight = (v * 10).toInt() / 10f) } }, valueRange = 1.2f..2.2f, steps = 9)
             }
-            Labeled("Lề hai bên: ${s.margin}") {
+            Labeled(tr(R.string.margins, s.margin)) {
                 Slider(s.margin.toFloat(), { v -> set { it.copy(margin = v.toInt()) } }, valueRange = 8f..48f, steps = 9)
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Căn đều hai bên", Modifier.weight(1f)); Switch(s.justify, { v -> set { it.copy(justify = v) } })
+                Text(tr(R.string.justify), Modifier.weight(1f)); Switch(s.justify, { v -> set { it.copy(justify = v) } })
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Thụt lề đầu đoạn", Modifier.weight(1f)); Switch(s.indent, { v -> set { it.copy(indent = v) } })
+                Text(tr(R.string.indent), Modifier.weight(1f)); Switch(s.indent, { v -> set { it.copy(indent = v) } })
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Giữ màn hình sáng khi đọc", Modifier.weight(1f)); Switch(s.keepScreenOn, { v -> set { it.copy(keepScreenOn = v) } })
+                Text(tr(R.string.keep_screen_on), Modifier.weight(1f)); Switch(s.keepScreenOn, { v -> set { it.copy(keepScreenOn = v) } })
             }
         }
     }

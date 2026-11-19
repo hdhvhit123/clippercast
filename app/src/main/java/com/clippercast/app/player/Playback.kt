@@ -1,5 +1,8 @@
 package com.clippercast.app.player
 
+import com.clippercast.app.tr
+import com.clippercast.app.R
+
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -15,6 +18,7 @@ import android.speech.tts.TextToSpeech
 import android.speech.tts.UtteranceProgressListener
 import android.speech.tts.Voice
 import androidx.core.content.ContextCompat
+import com.clippercast.app.data.TextUtils
 import com.clippercast.app.data.AppSettings
 import com.clippercast.app.data.Article
 import com.clippercast.app.data.ClipStatus
@@ -123,7 +127,7 @@ object Playback {
                     onReady.clear()
                     tts = null
                     _state.update { it.copy(isLoading = false, isPlaying = false, needsVoiceData = true,
-                        error = "Máy chưa có ứng dụng đọc văn bản (TTS). Hãy cài Google Text-to-Speech từ Play Store.") }
+                        error = tr(R.string.no_tts_engine)) }
                     notifyPlayer()
                 }
             }
@@ -132,14 +136,16 @@ object Playback {
 
     /** Danh sách giọng cho một ngôn ngữ (lấy trực tiếp từ engine, spec 2.3). */
     fun voicesFor(lang: String, callback: (List<Voice>) -> Unit) = withTts {
+        val code = TextUtils.langKey(lang)
         val list = runCatching { tts?.voices?.toList() }.getOrNull().orEmpty()
-            .filter { it.locale.language == lang }
+            .filter { it.locale.language == code }
             .filter { TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED !in it.features }
             .sortedWith(compareBy<Voice>({ it.isNetworkConnectionRequired }, { -it.quality }, { it.name }))
         callback(list)
     }
 
-    private fun pickVoice(lang: String): Pair<Boolean, String?> {
+    private fun pickVoice(rawLang: String): Pair<Boolean, String?> {
+        val lang = TextUtils.langKey(rawLang)
         val t = tts ?: return false to null
         val all = runCatching { t.voices?.toList() }.getOrNull().orEmpty()
             .filter { it.locale.language == lang && TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED !in it.features }
@@ -178,7 +184,7 @@ object Playback {
             if (errorCode == TextToSpeech.ERROR_NETWORK || errorCode == TextToSpeech.ERROR_NETWORK_TIMEOUT) {
                 main.post {
                     pause()
-                    _state.update { it.copy(error = "Giọng đọc này cần mạng. Hãy chọn giọng offline.") }
+                    _state.update { it.copy(error = tr(R.string.voice_needs_network)) }
                 }
             } else onDone(utteranceId)
         }
@@ -205,7 +211,7 @@ object Playback {
         scope.launch {
             val a = repo.get(articleId) ?: return@launch
             if (!ClipStatus.isReadable(a.status)) {
-                _state.update { it.copy(error = "Bài này chưa tải xong nội dung.") }
+                _state.update { it.copy(error = tr(R.string.not_downloaded_yet_dot)) }
                 return@launch
             }
             val cur = _state.value.article?.id
@@ -217,7 +223,7 @@ object Playback {
                 var acc = 0; sentences.forEachIndexed { k, s -> arr[k] = acc; acc += s.length + 1 }
             }
             intro = if (settings.readIntro) {
-                if (a.lang == "vi" || a.lang == null) "${a.title}. Từ ${a.siteName}." else "${a.title}. From ${a.siteName}."
+                "${a.title}. ${a.siteName}."
             } else null
             val start = (fromSentence ?: a.listenSentence).coerceIn(0, maxOf(0, sentences.size - 1))
             _state.update {
@@ -234,10 +240,10 @@ object Playback {
         val a = _state.value.article ?: return
         withTts {
             val t = tts ?: return@withTts
-            val (ok, voice) = pickVoice(a.lang ?: "vi")
+            val (ok, voice) = pickVoice(TextUtils.langKey(a.lang))
             if (!ok) {
                 _state.update { it.copy(isLoading = false, isPlaying = false, needsVoiceData = true,
-                    error = "Máy chưa có giọng đọc offline cho ${langName(a.lang)}. Hãy tải giọng đọc hoặc tắt chế độ Riêng tư tối đa trong Cài đặt.") }
+                    error = tr(R.string.no_offline_voice, langName(a.lang))) }
                 notifyPlayer(); return@withTts
             }
             if (!requestFocus()) return@withTts
@@ -340,7 +346,8 @@ object Playback {
         if (_state.value.isPlaying) speakFrom(_state.value.sentenceIndex)
     }
 
-    fun setVoice(lang: String, name: String) {
+    fun setVoice(rawLang: String, name: String) {
+        val lang = TextUtils.langKey(rawLang)
         scope.launch { settingsRepo.update { it.copy(voices = it.voices + (lang to name)) } }
         settings = settings.copy(voices = settings.voices + (lang to name))
         if (_state.value.isPlaying) speakFrom(_state.value.sentenceIndex)
@@ -413,10 +420,7 @@ object Playback {
 
     private fun notifyPlayer() { player?.refresh() }
 
-    private fun langName(l: String?) = when (l) {
-        "vi", null -> "tiếng Việt"; "en" -> "tiếng Anh"; "fr" -> "tiếng Pháp"; "de" -> "tiếng Đức"
-        "ja" -> "tiếng Nhật"; "ko" -> "tiếng Hàn"; "zh" -> "tiếng Trung"; else -> "ngôn ngữ \"$l\""
-    }
+    private fun langName(l: String?) = com.clippercast.app.ui.langDisplayName(TextUtils.langKey(l))
 
     // ---------- Audio focus & tai nghe ----------
     private val audioManager by lazy { app.getSystemService(AudioManager::class.java) }

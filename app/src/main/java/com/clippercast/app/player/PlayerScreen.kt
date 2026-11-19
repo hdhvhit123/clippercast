@@ -1,5 +1,8 @@
 package com.clippercast.app.player
 
+import com.clippercast.app.tr
+import com.clippercast.app.R
+
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.speech.tts.TextToSpeech
@@ -90,11 +93,11 @@ fun PlayerScreen(onBack: () -> Unit, openArticle: (Long) -> Unit, openQueue: () 
 
     Scaffold(topBar = {
         TopAppBar(
-            title = { Text("Đang nghe") },
-            navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Outlined.KeyboardArrowDown, "Đóng trình phát") } },
+            title = { Text(tr(R.string.listening)) },
+            navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.Outlined.KeyboardArrowDown, tr(R.string.close_player)) } },
             actions = {
-                IconButton(onClick = openQueue) { Icon(Icons.AutoMirrored.Outlined.QueueMusic, "Hàng chờ nghe") }
-                st.article?.let { a -> IconButton(onClick = { openArticle(a.id) }) { Icon(Icons.AutoMirrored.Outlined.MenuBook, "Mở bài để đọc") } }
+                IconButton(onClick = openQueue) { Icon(Icons.AutoMirrored.Outlined.QueueMusic, tr(R.string.tab_queue)) }
+                st.article?.let { a -> IconButton(onClick = { openArticle(a.id) }) { Icon(Icons.AutoMirrored.Outlined.MenuBook, tr(R.string.open_to_read)) } }
             },
         )
     }) { pad ->
@@ -102,8 +105,8 @@ fun PlayerScreen(onBack: () -> Unit, openArticle: (Long) -> Unit, openQueue: () 
         if (a == null) {
             Box(Modifier.padding(pad).fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Chưa có bài nào đang phát", style = MaterialTheme.typography.titleMedium)
-                    if (st.queue.isNotEmpty()) Button(onClick = { Playback.resume() }) { Text("Phát hàng chờ (${st.queue.size} bài)") }
+                    Text(tr(R.string.nothing_playing), style = MaterialTheme.typography.titleMedium)
+                    if (st.queue.isNotEmpty()) Button(onClick = { Playback.resume() }) { Text(tr(R.string.play_queue_n, st.queue.size)) }
                 }
             }
             return@Scaffold
@@ -130,7 +133,7 @@ fun PlayerScreen(onBack: () -> Unit, openArticle: (Long) -> Unit, openQueue: () 
             Box(Modifier.fillMaxWidth().height(110.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceContainer).padding(14.dp),
                 contentAlignment = Alignment.Center) {
                 Text(
-                    st.error ?: st.currentText.ifBlank { if (st.isLoading) "Đang chuẩn bị giọng đọc…" else "" },
+                    st.error ?: st.currentText.ifBlank { if (st.isLoading) tr(R.string.preparing_voice) else "" },
                     style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center, maxLines = 4, overflow = TextOverflow.Ellipsis,
                     color = if (st.error != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
                 )
@@ -142,43 +145,43 @@ fun PlayerScreen(onBack: () -> Unit, openArticle: (Long) -> Unit, openQueue: () 
                         catch (_: ActivityNotFoundException) {
                             context.startActivity(Intent("com.android.settings.TTS_SETTINGS").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
                         }
-                    }) { Text("Tải giọng đọc") }
-                    TextButton(onClick = { Playback.clearError(); Playback.resume() }) { Text("Thử lại") }
+                    }) { Text(tr(R.string.download_voice)) }
+                    TextButton(onClick = { Playback.clearError(); Playback.resume() }) { Text(tr(R.string.retry)) }
                 }
             }
             Spacer(Modifier.height(16.dp))
             val progress = if (st.sentenceCount > 0) (st.sentenceIndex + 1f) / st.sentenceCount else 0f
             LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)))
             Row(Modifier.fillMaxWidth().padding(top = 4.dp)) {
-                Text("Câu ${st.sentenceIndex + 1}/${st.sentenceCount}", style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
+                Text(tr(R.string.sentence_progress, st.sentenceIndex + 1, st.sentenceCount), style = MaterialTheme.typography.labelMedium, modifier = Modifier.weight(1f))
                 val remainChars = (st.totalChars - st.charsBefore).coerceAtLeast(0)
                 val remainMin = (remainChars / (Playback.CHARS_PER_SEC * st.speed) / 60).toInt()
-                Text("còn ~${remainMin} phút", style = MaterialTheme.typography.labelMedium)
+                Text(tr(R.string.min_left, remainMin), style = MaterialTheme.typography.labelMedium)
             }
             Spacer(Modifier.height(12.dp))
             // Điều khiển: chạm = tua 1 câu, nhấn giữ = tua 1 đoạn
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                IconButton(onClick = { Playback.previousArticle() }) { Icon(Icons.Outlined.SkipPrevious, "Bài trước", Modifier.size(30.dp)) }
+                IconButton(onClick = { Playback.previousArticle() }) { Icon(Icons.Outlined.SkipPrevious, tr(R.string.prev_article), Modifier.size(30.dp)) }
                 Box(Modifier.size(52.dp).clip(CircleShape).combinedClickable(
-                    onClickLabel = "Lùi một câu", onLongClickLabel = "Lùi một đoạn",
+                    onClickLabel = tr(R.string.back_sentence), onLongClickLabel = tr(R.string.back_paragraph),
                     onClick = { Playback.seekSentence(-1) }, onLongClick = { Playback.seekParagraph(false) }), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Outlined.FastRewind, "Lùi một câu", Modifier.size(30.dp))
+                    Icon(Icons.Outlined.FastRewind, tr(R.string.back_sentence), Modifier.size(30.dp))
                 }
                 FilledIconButton(onClick = { Playback.toggle() }, modifier = Modifier.size(76.dp),
                     colors = IconButtonDefaults.filledIconButtonColors()) {
-                    Icon(if (st.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow, if (st.isPlaying) "Tạm dừng" else "Phát", Modifier.size(40.dp))
+                    Icon(if (st.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow, if (st.isPlaying) tr(R.string.pause) else tr(R.string.play), Modifier.size(40.dp))
                 }
                 Box(Modifier.size(52.dp).clip(CircleShape).combinedClickable(
-                    onClickLabel = "Tới một câu", onLongClickLabel = "Tới một đoạn",
+                    onClickLabel = tr(R.string.fwd_sentence), onLongClickLabel = tr(R.string.fwd_paragraph),
                     onClick = { Playback.seekSentence(1) }, onLongClick = { Playback.seekParagraph(true) }), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Outlined.FastForward, "Tới một câu", Modifier.size(30.dp))
+                    Icon(Icons.Outlined.FastForward, tr(R.string.fwd_sentence), Modifier.size(30.dp))
                 }
-                IconButton(onClick = { Playback.nextArticle() }) { Icon(Icons.Outlined.SkipNext, "Bài tiếp theo", Modifier.size(30.dp)) }
+                IconButton(onClick = { Playback.nextArticle() }) { Icon(Icons.Outlined.SkipNext, tr(R.string.next_article), Modifier.size(30.dp)) }
             }
             Spacer(Modifier.height(16.dp))
             // Tốc độ (spec 2.3: 0.5x–2.5x, 2.6x–3.0x là thử nghiệm)
             val maxSpeed = if (settings.experimentalSpeed) 3.0f else 2.5f
-            Text("Tốc độ: ${"%.1f".format(st.speed)}x", style = MaterialTheme.typography.labelLarge)
+            Text(tr(R.string.speed, "%.1f".format(st.speed)), style = MaterialTheme.typography.labelLarge)
             Slider(st.speed, { v -> Playback.setSpeed((v * 10).toInt() / 10f) }, valueRange = 0.5f..maxSpeed,
                 steps = ((maxSpeed - 0.5f) * 10).toInt() - 1)
             Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -189,29 +192,29 @@ fun PlayerScreen(onBack: () -> Unit, openArticle: (Long) -> Unit, openQueue: () 
             Spacer(Modifier.height(8.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 val sleepLabel = when {
-                    st.sleepEndOfArticle -> "Tắt khi hết bài"
-                    st.sleepEndsAt != null -> "Tắt sau ${((st.sleepEndsAt!! - now) / 60000) + 1} phút"
-                    else -> "Hẹn giờ tắt"
+                    st.sleepEndOfArticle -> tr(R.string.sleep_end_article)
+                    st.sleepEndsAt != null -> tr(R.string.sleep_in, (((st.sleepEndsAt!! - now) / 60000) + 1).toInt())
+                    else -> tr(R.string.sleep_timer)
                 }
                 TextButton(onClick = { showSleep = true }) { Icon(Icons.Outlined.Bedtime, null); Spacer(Modifier.width(6.dp)); Text(sleepLabel) }
-                TextButton(onClick = { showVoice = true }) { Icon(Icons.Outlined.RecordVoiceOver, null); Spacer(Modifier.width(6.dp)); Text("Giọng đọc") }
+                TextButton(onClick = { showVoice = true }) { Icon(Icons.Outlined.RecordVoiceOver, null); Spacer(Modifier.width(6.dp)); Text(tr(R.string.voice)) }
             }
             Spacer(Modifier.height(24.dp))
         }
     }
 
     if (showSleep) {
-        AlertDialog(onDismissRequest = { showSleep = false }, title = { Text("Hẹn giờ tắt") }, text = {
+        AlertDialog(onDismissRequest = { showSleep = false }, title = { Text(tr(R.string.sleep_timer)) }, text = {
             Column {
                 listOf(5, 15, 30, 45, 60).forEach { m ->
-                    TextButton(onClick = { Playback.setSleepTimer(m); showSleep = false }) { Text("$m phút") }
+                    TextButton(onClick = { Playback.setSleepTimer(m); showSleep = false }) { Text(tr(R.string.minutes_n, m)) }
                 }
-                TextButton(onClick = { Playback.setSleepEndOfArticle(); showSleep = false }) { Text("Khi hết bài này") }
-                TextButton(onClick = { Playback.setSleepTimer(null); showSleep = false }) { Text("Tắt hẹn giờ") }
+                TextButton(onClick = { Playback.setSleepEndOfArticle(); showSleep = false }) { Text(tr(R.string.at_end_article)) }
+                TextButton(onClick = { Playback.setSleepTimer(null); showSleep = false }) { Text(tr(R.string.sleep_off)) }
             }
         }, confirmButton = {})
     }
-    if (showVoice) VoiceDialog(st.article?.lang ?: "vi", settings, onDismiss = { showVoice = false })
+    if (showVoice) VoiceDialog(com.clippercast.app.data.TextUtils.langKey(st.article?.lang), settings, onDismiss = { showVoice = false })
 }
 
 @Composable
@@ -219,30 +222,30 @@ fun VoiceDialog(lang: String, settings: AppSettings, onDismiss: () -> Unit) {
     val context = LocalContext.current
     var voices by remember { mutableStateOf<List<Voice>?>(null) }
     LaunchedEffect(lang) { Playback.voicesFor(lang) { voices = it } }
-    val current = settings.voices[lang]
-    AlertDialog(onDismissRequest = onDismiss, title = { Text("Giọng đọc") }, text = {
+    val current = settings.voices[com.clippercast.app.data.TextUtils.langKey(lang)]
+    AlertDialog(onDismissRequest = onDismiss, title = { Text(tr(R.string.voice)) }, text = {
         Column(Modifier.verticalScroll(rememberScrollState())) {
             when {
-                voices == null -> Text("Đang tải danh sách giọng…")
-                voices!!.isEmpty() -> Text("Máy chưa có giọng đọc cho ngôn ngữ này. Hãy tải giọng trong cài đặt Chuyển văn bản thành giọng nói của hệ thống.")
+                voices == null -> Text(tr(R.string.loading_voices))
+                voices!!.isEmpty() -> Text(tr(R.string.no_voice_lang))
                 else -> voices!!.forEachIndexed { i, v ->
                     val net = v.isNetworkConnectionRequired
                     val disabled = net && settings.privacyMax
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         RadioButton(selected = v.name == current, enabled = !disabled, onClick = { Playback.setVoice(lang, v.name); onDismiss() })
                         Column {
-                            Text("Giọng ${i + 1}" + if (net) " ☁️ cần mạng" else " · offline")
+                            Text(tr(R.string.voice_n, i + 1) + if (net) tr(R.string.needs_network) else tr(R.string.offline_suffix))
                             Text(v.name, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
             }
-            if (settings.privacyMax) Text("Chế độ Riêng tư tối đa đang bật: chỉ dùng giọng offline.",
+            if (settings.privacyMax) Text(tr(R.string.privacy_on_note),
                 style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 8.dp))
         }
     }, confirmButton = {
         TextButton(onClick = {
             runCatching { context.startActivity(Intent("com.android.settings.TTS_SETTINGS").addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
-        }) { Text("Cài đặt TTS hệ thống") }
-    }, dismissButton = { TextButton(onClick = onDismiss) { Text("Đóng") } })
+        }) { Text(tr(R.string.system_tts)) }
+    }, dismissButton = { TextButton(onClick = onDismiss) { Text(tr(R.string.close)) } })
 }

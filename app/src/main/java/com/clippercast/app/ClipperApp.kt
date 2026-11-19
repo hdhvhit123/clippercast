@@ -16,6 +16,7 @@ class ClipperApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        appContext = this
         Notifications.createChannels(this)
         com.clippercast.app.player.Playback.init(this)
         scope.launch {
@@ -23,3 +24,11 @@ class ClipperApp : Application() {
         }
     }
 }
+
+/** Ngữ cảnh ứng dụng, dùng để lấy chuỗi theo ngôn ngữ của máy ở mọi nơi. */
+lateinit var appContext: android.content.Context
+    private set
+
+/** Lấy chuỗi đã dịch theo ngôn ngữ máy. */
+fun tr(@androidx.annotation.StringRes id: Int, vararg args: Any): String =
+    if (args.isEmpty()) appContext.getString(id) else appContext.getString(id, *args)

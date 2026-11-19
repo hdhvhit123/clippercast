@@ -1,5 +1,8 @@
 package com.clippercast.app.ui
 
+import com.clippercast.app.tr
+import com.clippercast.app.R
+
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -56,11 +59,11 @@ import java.io.File
 data class StatusInfo(val icon: ImageVector, val label: String)
 
 fun statusInfo(a: Article): StatusInfo? = when (a.status) {
-    ClipStatus.PENDING -> StatusInfo(Icons.Outlined.HourglassEmpty, "Chờ tải")
-    ClipStatus.LOADING -> StatusInfo(Icons.Outlined.CloudDownload, "Đang tải")
-    ClipStatus.PARTIAL -> StatusInfo(Icons.Outlined.WarningAmber, "Có thể chưa đầy đủ")
-    ClipStatus.FAILED -> StatusInfo(Icons.Outlined.ErrorOutline, "Lỗi")
-    ClipStatus.LINK_ONLY -> StatusInfo(Icons.Outlined.Link, "Chỉ có link")
+    ClipStatus.PENDING -> StatusInfo(Icons.Outlined.HourglassEmpty, tr(R.string.status_pending))
+    ClipStatus.LOADING -> StatusInfo(Icons.Outlined.CloudDownload, tr(R.string.status_loading))
+    ClipStatus.PARTIAL -> StatusInfo(Icons.Outlined.WarningAmber, tr(R.string.status_partial))
+    ClipStatus.FAILED -> StatusInfo(Icons.Outlined.ErrorOutline, tr(R.string.status_failed))
+    ClipStatus.LINK_ONLY -> StatusInfo(Icons.Outlined.Link, tr(R.string.status_link_only))
     else -> null
 }
 
@@ -80,7 +83,7 @@ fun ArticleCard(
         Column(
             Modifier
                 .fillMaxWidth()
-                .combinedClickable(onClick = onClick, onLongClick = onLongClick, onLongClickLabel = "Tùy chọn")
+                .combinedClickable(onClick = onClick, onLongClick = onLongClick, onLongClickLabel = tr(R.string.options))
                 .semantics { customActions = a11yActions }
                 .padding(horizontal = 16.dp, vertical = if (compact) 10.dp else 14.dp)
         ) {
@@ -93,7 +96,7 @@ fun ArticleCard(
                         )
                         if (a.favorite) {
                             Spacer(Modifier.width(6.dp))
-                            Icon(Icons.Filled.Favorite, "Yêu thích", Modifier.size(12.dp), tint = MaterialTheme.colorScheme.primary)
+                            Icon(Icons.Filled.Favorite, tr(R.string.favorite), Modifier.size(12.dp), tint = MaterialTheme.colorScheme.primary)
                         }
                     }
                     Spacer(Modifier.height(4.dp))
@@ -112,7 +115,7 @@ fun ArticleCard(
                             Text(status.label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         } else if (a.wordCount > 0) {
                             Text(
-                                "${TextUtils.readMinutes(a.wordCount)} phút đọc · ${TextUtils.listenMinutes(a.wordCount, speed)} phút nghe",
+                                tr(R.string.card_minutes, TextUtils.readMinutes(a.wordCount), TextUtils.listenMinutes(a.wordCount, speed)),
                                 style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
                         }
@@ -161,7 +164,7 @@ fun MiniPlayer(st: PlayState, onOpen: () -> Unit, onToggle: () -> Unit, onNext: 
             val p = if (st.sentenceCount > 0) (st.sentenceIndex + 1f) / st.sentenceCount else 0f
             LinearProgressIndicator(progress = { p }, modifier = Modifier.fillMaxWidth().height(2.dp))
             Row(
-                Modifier.fillMaxWidth().clickable(onClickLabel = "Mở trình phát", onClick = onOpen)
+                Modifier.fillMaxWidth().clickable(onClickLabel = tr(R.string.open_player), onClick = onOpen)
                     .padding(start = 16.dp, end = 4.dp, top = 6.dp, bottom = 6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -174,15 +177,15 @@ fun MiniPlayer(st: PlayState, onOpen: () -> Unit, onToggle: () -> Unit, onNext: 
                 Column(Modifier.weight(1f)) {
                     Text(a.title, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(
-                        st.error ?: if (st.isLoading) "Đang chuẩn bị giọng đọc…" else a.siteName,
+                        st.error ?: if (st.isLoading) tr(R.string.preparing_voice) else a.siteName,
                         style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
                         color = if (st.error != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 IconButton(onClick = onToggle) {
-                    Icon(if (st.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow, if (st.isPlaying) "Tạm dừng" else "Phát")
+                    Icon(if (st.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow, if (st.isPlaying) tr(R.string.pause) else tr(R.string.play))
                 }
-                IconButton(onClick = onNext) { Icon(Icons.Filled.SkipNext, "Bài tiếp theo") }
+                IconButton(onClick = onNext) { Icon(Icons.Filled.SkipNext, tr(R.string.next_article)) }
             }
         }
     }

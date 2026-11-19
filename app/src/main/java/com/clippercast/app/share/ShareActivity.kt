@@ -1,5 +1,8 @@
 package com.clippercast.app.share
 
+import com.clippercast.app.tr
+import com.clippercast.app.R
+
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
@@ -39,10 +42,10 @@ class ShareActivity : Activity() {
             val res = runCatching { app.repo.saveShared(text, subject) }.getOrNull()
             withContext(Dispatchers.Main) {
                 val msg = when {
-                    res == null -> "Không tìm thấy link hoặc nội dung để lưu"
-                    res.duplicate -> "Bài này đã có trong thư viện"
-                    res.isNote -> "Đã lưu đoạn văn bản vào ClipperCast"
-                    else -> "Đã lưu vào ClipperCast"
+                    res == null -> tr(R.string.share_nothing)
+                    res.duplicate -> tr(R.string.already_saved)
+                    res.isNote -> tr(R.string.share_text_saved)
+                    else -> tr(R.string.share_saved)
                 }
                 Toast.makeText(app, msg, Toast.LENGTH_SHORT).show()
             }

@@ -1,5 +1,7 @@
 package com.clippercast.app.clip
 
+import com.clippercast.app.tr
+
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -20,8 +22,8 @@ object Notifications {
     fun createChannels(context: Context) {
         val nm = context.getSystemService(NotificationManager::class.java)
         nm.createNotificationChannel(
-            NotificationChannel(CH_CLIP, "Lưu bài viết", NotificationManager.IMPORTANCE_LOW).apply {
-                description = "Báo khi bài viết đã tải xong hoặc gặp lỗi"
+            NotificationChannel(CH_CLIP, tr(R.string.ch_clip), NotificationManager.IMPORTANCE_LOW).apply {
+                description = tr(R.string.ch_clip_desc)
             }
         )
     }
@@ -46,11 +48,11 @@ object Notifications {
         if (!canPost(context)) return
         val n = NotificationCompat.Builder(context, CH_CLIP)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(if (partial) "Đã lưu (có thể chưa đầy đủ)" else "Đã lưu để đọc offline")
+            .setContentTitle(if (partial) tr(R.string.notif_saved_partial) else tr(R.string.notif_saved))
             .setContentText(title)
             .setContentIntent(articleIntent(context, MainActivity.ACTION_OPEN, id))
-            .addAction(0, "Đọc ngay", articleIntent(context, MainActivity.ACTION_OPEN, id))
-            .addAction(0, "Nghe ngay", articleIntent(context, MainActivity.ACTION_LISTEN, id))
+            .addAction(0, tr(R.string.read_now), articleIntent(context, MainActivity.ACTION_OPEN, id))
+            .addAction(0, tr(R.string.listen_now), articleIntent(context, MainActivity.ACTION_LISTEN, id))
             .setAutoCancel(true)
             .setTimeoutAfter(60_000)
             .build()
@@ -61,11 +63,11 @@ object Notifications {
         if (!canPost(context)) return
         val n = NotificationCompat.Builder(context, CH_CLIP)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle("Chưa lưu được nội dung bài")
+            .setContentTitle(tr(R.string.notif_failed))
             .setContentText(reason)
             .setStyle(NotificationCompat.BigTextStyle().bigText("$title\n$reason"))
             .setContentIntent(articleIntent(context, MainActivity.ACTION_OPEN, id))
-            .addAction(0, "Mở để đăng nhập", articleIntent(context, MainActivity.ACTION_BROWSER, id))
+            .addAction(0, tr(R.string.open_to_sign_in_short), articleIntent(context, MainActivity.ACTION_BROWSER, id))
             .setAutoCancel(true)
             .build()
         NotificationManagerCompat.from(context).notify(id.toInt(), n)

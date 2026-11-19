@@ -1,5 +1,8 @@
 package com.clippercast.app.ui
 
+import com.clippercast.app.tr
+import com.clippercast.app.R
+
 import android.content.ClipboardManager
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -70,22 +73,22 @@ fun ArticleActionSheet(a: Article, actions: ArticleActions, nav: HomeNav, onDism
             fun go(f: () -> Unit) { onDismiss(); f() }
             val readable = ClipStatus.isReadable(a.status)
             if (readable) {
-                SheetItem(Icons.AutoMirrored.Outlined.MenuBook, "Đọc") { go { nav.openArticle(a.id) } }
-                SheetItem(Icons.Outlined.Headphones, "Nghe ngay") { go { nav.listen(a.id) } }
-                SheetItem(Icons.Outlined.QueuePlayNext, "Phát tiếp theo") { go { actions.playNext(a) } }
-                SheetItem(Icons.AutoMirrored.Outlined.PlaylistAdd, "Thêm vào cuối hàng chờ") { go { actions.enqueue(a) } }
+                SheetItem(Icons.AutoMirrored.Outlined.MenuBook, tr(R.string.read)) { go { nav.openArticle(a.id) } }
+                SheetItem(Icons.Outlined.Headphones, tr(R.string.listen_now)) { go { nav.listen(a.id) } }
+                SheetItem(Icons.Outlined.QueuePlayNext, tr(R.string.play_next)) { go { actions.playNext(a) } }
+                SheetItem(Icons.AutoMirrored.Outlined.PlaylistAdd, tr(R.string.add_to_queue_end)) { go { actions.enqueue(a) } }
             }
             if (a.status == ClipStatus.FAILED || a.status == ClipStatus.PARTIAL || a.status == ClipStatus.PENDING) {
-                SheetItem(Icons.Outlined.Refresh, "Thử tải lại") { go { actions.retry(a) } }
+                SheetItem(Icons.Outlined.Refresh, tr(R.string.try_download_again)) { go { actions.retry(a) } }
             }
             if (!a.isNote && a.url.isNotBlank() && a.status != ClipStatus.READY) {
-                SheetItem(Icons.AutoMirrored.Outlined.Login, "Mở trong app để đăng nhập rồi lưu") { go { nav.browser(a.id) } }
+                SheetItem(Icons.AutoMirrored.Outlined.Login, tr(R.string.open_to_sign_in)) { go { nav.browser(a.id) } }
             }
-            SheetItem(Icons.Outlined.FavoriteBorder, if (a.favorite) "Bỏ yêu thích" else "Yêu thích") { go { actions.favorite(a) } }
-            if (a.archived) SheetItem(Icons.Outlined.Unarchive, "Đưa về Hộp thư") { go { actions.unarchive(a) } }
-            else SheetItem(Icons.Outlined.Archive, "Lưu trữ (đã đọc)") { go { actions.archive(a) } }
-            if (a.url.isNotBlank()) SheetItem(Icons.AutoMirrored.Outlined.OpenInNew, "Xem bản gốc") { go { actions.openOriginal(a) } }
-            SheetItem(Icons.Outlined.Delete, "Xóa") { go { actions.delete(a) } }
+            SheetItem(Icons.Outlined.FavoriteBorder, if (a.favorite) tr(R.string.unfavorite) else tr(R.string.favorite)) { go { actions.favorite(a) } }
+            if (a.archived) SheetItem(Icons.Outlined.Unarchive, tr(R.string.move_to_inbox)) { go { actions.unarchive(a) } }
+            else SheetItem(Icons.Outlined.Archive, tr(R.string.archive_read)) { go { actions.archive(a) } }
+            if (a.url.isNotBlank()) SheetItem(Icons.AutoMirrored.Outlined.OpenInNew, tr(R.string.view_original)) { go { actions.openOriginal(a) } }
+            SheetItem(Icons.Outlined.Delete, tr(R.string.delete)) { go { actions.delete(a) } }
         }
     }
 }
@@ -120,20 +123,20 @@ fun AddDialog(onDismiss: () -> Unit, onSaved: (String) -> Unit, initialMode: Int
     }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Thêm vào ClipperCast") },
+        title = { Text(tr(R.string.add_dialog_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                    SegmentedButton(mode == 0, { mode = 0 }, SegmentedButtonDefaults.itemShape(0, 2)) { Text("Dán link") }
-                    SegmentedButton(mode == 1, { mode = 1 }, SegmentedButtonDefaults.itemShape(1, 2)) { Text("Dán văn bản") }
+                    SegmentedButton(mode == 0, { mode = 0 }, SegmentedButtonDefaults.itemShape(0, 2)) { Text(tr(R.string.paste_link)) }
+                    SegmentedButton(mode == 1, { mode = 1 }, SegmentedButtonDefaults.itemShape(1, 2)) { Text(tr(R.string.paste_text)) }
                 }
                 if (mode == 0) {
-                    OutlinedTextField(link, { link = it }, label = { Text("Đường link (mỗi dòng một link)") }, minLines = 2, maxLines = 6,
+                    OutlinedTextField(link, { link = it }, label = { Text(tr(R.string.links_hint)) }, minLines = 2, maxLines = 6,
                         modifier = Modifier.fillMaxWidth())
                 } else {
-                    OutlinedTextField(title, { title = it }, label = { Text("Tiêu đề (không bắt buộc)") }, singleLine = true,
+                    OutlinedTextField(title, { title = it }, label = { Text(tr(R.string.title_optional)) }, singleLine = true,
                         modifier = Modifier.fillMaxWidth())
-                    OutlinedTextField(body, { body = it }, label = { Text("Nội dung") }, minLines = 5, maxLines = 10,
+                    OutlinedTextField(body, { body = it }, label = { Text(tr(R.string.content)) }, minLines = 5, maxLines = 10,
                         modifier = Modifier.fillMaxWidth())
                 }
             }
@@ -143,38 +146,28 @@ fun AddDialog(onDismiss: () -> Unit, onSaved: (String) -> Unit, initialMode: Int
                 scope.launch {
                     if (mode == 0) {
                         val urls = link.lines().mapNotNull { UrlNormalizer.extractUrl(it) }
-                        if (urls.isEmpty()) { onSaved("Không tìm thấy link hợp lệ"); return@launch }
+                        if (urls.isEmpty()) { onSaved(tr(R.string.no_valid_link)); return@launch }
                         var dup = 0
                         urls.forEach { if (app.repo.saveUrl(it).duplicate) dup++ }
-                        onSaved(if (urls.size == 1) (if (dup == 1) "Bài này đã có trong thư viện" else "Đã lưu, đang tải nội dung…")
-                            else "Đã lưu ${urls.size - dup} link mới")
+                        onSaved(if (urls.size == 1) (if (dup == 1) tr(R.string.already_saved) else tr(R.string.saved_downloading))
+                            else tr(R.string.saved_n_links, urls.size - dup))
                     } else {
-                        if (body.isBlank()) { onSaved("Nội dung đang trống"); return@launch }
+                        if (body.isBlank()) { onSaved(tr(R.string.content_empty)); return@launch }
                         app.repo.addNote(title, body)
-                        onSaved("Đã lưu văn bản")
+                        onSaved(tr(R.string.text_saved))
                     }
                     onDismiss()
                 }
-            }) { Text("Lưu") }
+            }) { Text(tr(R.string.save)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Hủy") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(tr(R.string.cancel)) } },
     )
 }
 
 /** Bài mẫu để người dùng mới thử ngay mà không cần mạng (spec 4.1, onboarding). */
 object SampleArticle {
     suspend fun insert(app: ClipperApp): Long {
-        val text = """
-Chào mừng bạn đến với ClipperCast. Đây là một bài viết mẫu để bạn thử trình đọc và giọng đọc ngay, kể cả khi không có mạng.
-
-Cách lưu bài rất đơn giản. Khi đang đọc một trang trong Chrome, bạn bấm nút ba chấm, chọn Chia sẻ, rồi chọn ClipperCast. Ứng dụng sẽ lưu link ngay lập tức, sau đó tải và làm sạch nội dung ở chế độ nền.
-
-Bài viết đã lưu nằm trong máy của bạn. Bạn có thể đọc với năm bảng màu, nhiều kiểu chữ và cỡ chữ khác nhau. Chạm vào giữa màn hình để hiện thanh công cụ.
-
-Khi bận tay, hãy bấm nút tai nghe để nghe bài viết như một tập podcast. Câu đang đọc sẽ được tô sáng. Bạn có thể đổi tốc độ, hẹn giờ tắt, và xếp nhiều bài vào hàng chờ để nghe liên tục.
-
-ClipperCast không cần tài khoản và không gửi dữ liệu của bạn đi đâu. Chúc bạn đọc vui!
-""".trim()
-        return app.repo.addNote("Chào mừng đến với ClipperCast", text)
+        val text = tr(R.string.sample_body)
+        return app.repo.addNote(tr(R.string.sample_title), text)
     }
 }

@@ -1,5 +1,7 @@
 package com.clippercast.app.data
 
+import com.clippercast.app.R
+
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
@@ -16,19 +18,19 @@ import kotlinx.coroutines.flow.map
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
 /** Bảng màu đọc (spec 2.2). */
-enum class ReaderTheme(val label: String, val bg: Long, val fg: Long, val accent: Long, val dark: Boolean) {
-    LIGHT("Trắng sáng", 0xFFFFFFFF, 0xFF1F1F1F, 0xFFC0441E, false),
-    SEPIA("Giấy vàng", 0xFFF6EEDC, 0xFF3B2F22, 0xFF9A4A12, false),
-    GRAY("Xám dịu", 0xFFDADCDF, 0xFF222428, 0xFF8A3A16, false),
-    NAVY("Tím than", 0xFF1E2235, 0xFFD6D8E4, 0xFFF0A07A, true),
-    OLED("Đen OLED", 0xFF000000, 0xFFC9C9C9, 0xFFF0A07A, true),
+enum class ReaderTheme(val labelRes: Int, val bg: Long, val fg: Long, val accent: Long, val dark: Boolean) {
+    LIGHT(R.string.theme_light, 0xFFFFFFFF, 0xFF1F1F1F, 0xFFC0441E, false),
+    SEPIA(R.string.theme_sepia, 0xFFF6EEDC, 0xFF3B2F22, 0xFF9A4A12, false),
+    GRAY(R.string.theme_gray, 0xFFDADCDF, 0xFF222428, 0xFF8A3A16, false),
+    NAVY(R.string.theme_navy, 0xFF1E2235, 0xFFD6D8E4, 0xFFF0A07A, true),
+    OLED(R.string.theme_oled, 0xFF000000, 0xFFC9C9C9, 0xFFF0A07A, true),
 }
 
-enum class ReaderFont(val label: String, val css: String) {
+enum class ReaderFont(val label: String, val css: String, val labelRes: Int? = null) {
     LORA("Lora", "'Lora', serif"),
     MERRIWEATHER("Merriweather", "'Merriweather', serif"),
     INTER("Inter", "'Inter', sans-serif"),
-    SYSTEM("Roboto (hệ thống)", "sans-serif"),
+    SYSTEM("Roboto", "sans-serif", R.string.font_system),
     DYSLEXIC("OpenDyslexic", "'OpenDyslexic', sans-serif"),
 }
 

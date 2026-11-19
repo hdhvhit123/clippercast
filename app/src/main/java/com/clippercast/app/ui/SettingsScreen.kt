@@ -1,5 +1,8 @@
 package com.clippercast.app.ui
 
+import com.clippercast.app.tr
+import com.clippercast.app.R
+
 import android.content.Intent
 import android.net.Uri
 import android.webkit.CookieManager
@@ -68,93 +71,101 @@ fun SettingsScreen(onBack: () -> Unit, onTrash: () -> Unit) {
     val backupLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         if (uri != null) scope.launch {
             runCatching { BackupManager.export(context, uri, includeImages) }
-                .onSuccess { toast("Đã sao lưu ${it.articles} bài") }
-                .onFailure { toast("Sao lưu thất bại: ${it.message}") }
+                .onSuccess { toast(tr(R.string.backup_done, it.articles)) }
+                .onFailure { toast(tr(R.string.backup_failed, it.message ?: "")) }
         }
     }
     val restoreLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) scope.launch {
             runCatching { BackupManager.import(context, uri) }
-                .onSuccess { toast("Đã khôi phục ${it.articles} bài" + if (it.skipped > 0) ", bỏ qua ${it.skipped} bài đã có" else "") }
-                .onFailure { toast(it.message ?: "File sao lưu bị hỏng hoặc không đúng định dạng.") }
+                .onSuccess { toast(tr(R.string.restore_done, it.articles) + if (it.skipped > 0) tr(R.string.restore_skipped, it.skipped) else "") }
+                .onFailure { toast(it.message ?: tr(R.string.backup_corrupt)) }
         }
     }
 
     Scaffold(topBar = {
-        TopAppBar(title = { Text("Cài đặt") }, navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Quay lại") } })
+        TopAppBar(title = { Text(tr(R.string.settings)) }, navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, tr(R.string.back)) } })
     }) { pad ->
         Column(Modifier.padding(pad).verticalScroll(rememberScrollState())) {
-            Section("Nghe")
-            Toggle("Đọc câu giới thiệu đầu bài", "\"Tiêu đề, từ Nguồn\"", s.readIntro) { v -> set { it.copy(readIntro = v) } }
-            Toggle("Đọc chú thích ảnh", null, s.readCaptions) { v -> set { it.copy(readCaptions = v) } }
-            Toggle("Tự phát bài tiếp theo trong hàng chờ", null, s.autoNext) { v -> set { it.copy(autoNext = v) } }
-            Toggle("Tự lưu trữ bài sau khi nghe xong", null, s.archiveAfterListen) { v -> set { it.copy(archiveAfterListen = v) } }
-            Toggle("Riêng tư tối đa", "Chỉ dùng giọng đọc offline. Giọng cần mạng sẽ gửi văn bản lên máy chủ của nhà cung cấp giọng đọc.", s.privacyMax) { v -> set { it.copy(privacyMax = v) } }
-            Toggle("Tốc độ thử nghiệm đến 3.0x", "Chất lượng ở tốc độ cao phụ thuộc giọng đọc của máy.", s.experimentalSpeed) { v -> set { it.copy(experimentalSpeed = v) } }
-            Item("Giọng tiếng Việt", s.voices["vi"] ?: "Tự chọn") { voiceLang = "vi" }
-            Item("Giọng tiếng Anh", s.voices["en"] ?: "Tự chọn") { voiceLang = "en" }
-            Item("Cài đặt Chuyển văn bản thành giọng nói của hệ thống", "Tải thêm giọng đọc offline") {
+            Section(tr(R.string.sec_listen))
+            Toggle(tr(R.string.set_intro), tr(R.string.set_intro_sub), s.readIntro) { v -> set { it.copy(readIntro = v) } }
+            Toggle(tr(R.string.set_captions), null, s.readCaptions) { v -> set { it.copy(readCaptions = v) } }
+            Toggle(tr(R.string.set_autonext), null, s.autoNext) { v -> set { it.copy(autoNext = v) } }
+            Toggle(tr(R.string.set_archive_after), null, s.archiveAfterListen) { v -> set { it.copy(archiveAfterListen = v) } }
+            Toggle(tr(R.string.set_privacy), tr(R.string.set_privacy_sub), s.privacyMax) { v -> set { it.copy(privacyMax = v) } }
+            Toggle(tr(R.string.set_exp_speed), tr(R.string.set_exp_speed_sub), s.experimentalSpeed) { v -> set { it.copy(experimentalSpeed = v) } }
+            voiceLanguages().forEach { lang ->
+                Item(tr(R.string.set_voice_for, langDisplayName(lang)), s.voices[lang] ?: tr(R.string.auto_select)) { voiceLang = lang }
+            }
+            Item(tr(R.string.set_system_tts), tr(R.string.set_system_tts_sub)) {
                 runCatching { context.startActivity(Intent("com.android.settings.TTS_SETTINGS")) }
             }
 
-            Section("Lưu bài")
-            Toggle("Chỉ tải bài khi dùng Wi-Fi", null, s.wifiOnly) { v -> set { it.copy(wifiOnly = v) } }
-            Item("Tải ảnh", listOf("Luôn tải", "Chỉ khi dùng Wi-Fi", "Không tải ảnh")[s.images]) { pick = "images" }
-            Toggle("Thông báo khi lưu xong", null, s.notifyOnSave) { v -> set { it.copy(notifyOnSave = v) } }
-            Toggle("Gợi ý lưu link vừa sao chép", "Android sẽ hiện thông báo mỗi khi app đọc bộ nhớ tạm", s.clipboardSuggest) { v -> set { it.copy(clipboardSuggest = v) } }
+            Section(tr(R.string.sec_saving))
+            Toggle(tr(R.string.set_wifi_only), null, s.wifiOnly) { v -> set { it.copy(wifiOnly = v) } }
+            Item(tr(R.string.set_images), imageOptions()[s.images]) { pick = "images" }
+            Toggle(tr(R.string.set_notify), null, s.notifyOnSave) { v -> set { it.copy(notifyOnSave = v) } }
+            Toggle(tr(R.string.set_clipboard), tr(R.string.set_clipboard_sub), s.clipboardSuggest) { v -> set { it.copy(clipboardSuggest = v) } }
 
-            Section("Thư viện")
-            Toggle("Danh sách dạng gọn", null, s.compactList) { v -> set { it.copy(compactList = v) } }
-            Item("Thùng rác", "Bài đã xóa được giữ 30 ngày", onTrash)
+            Section(tr(R.string.sec_library))
+            Toggle(tr(R.string.set_compact), null, s.compactList) { v -> set { it.copy(compactList = v) } }
+            Item(tr(R.string.trash), tr(R.string.trash_kept), onTrash)
 
-            Section("Dung lượng")
-            Item("Dung lượng đang dùng", formatSize(totalSize)) {}
-            Item("Xóa ảnh của bài đã lưu trữ", "Giữ lại phần chữ") {
-                scope.launch { val freed = app.repo.clearArchivedImages(); toast("Đã giải phóng ${formatSize(freed)}") }
+            Section(tr(R.string.sec_storage))
+            Item(tr(R.string.storage_used), formatSize(totalSize)) {}
+            Item(tr(R.string.clear_archived_images), tr(R.string.keep_text)) {
+                scope.launch { val freed = app.repo.clearArchivedImages(); toast(tr(R.string.freed, formatSize(freed))) }
             }
-            Item("Tự xóa bài trong Lưu trữ", if (s.autoDeleteArchivedDays == 0) "Không bao giờ" else "Sau ${s.autoDeleteArchivedDays} ngày (trừ bài yêu thích)") { pick = "autodelete" }
+            Item(tr(R.string.auto_delete), if (s.autoDeleteArchivedDays == 0) tr(R.string.never) else tr(R.string.after_days_except_fav, s.autoDeleteArchivedDays)) { pick = "autodelete" }
 
-            Section("Sao lưu & khôi phục")
-            Toggle("Kèm ảnh trong file sao lưu", "Tắt để file nhỏ hơn", includeImages) { includeImages = it }
-            Item("Sao lưu ngay", "Lưu toàn bộ thư viện thành một file ZIP, ví dụ vào thư mục Google Drive") {
+            Section(tr(R.string.sec_backup))
+            Toggle(tr(R.string.include_images), tr(R.string.include_images_sub), includeImages) { includeImages = it }
+            Item(tr(R.string.backup_now), tr(R.string.backup_now_sub)) {
                 val d = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT).format(Date())
                 backupLauncher.launch("ClipperCast-$d.zip")
             }
-            Item("Khôi phục từ file sao lưu", "Bài đã có sẽ được bỏ qua") { restoreLauncher.launch(arrayOf("application/zip", "application/octet-stream")) }
+            Item(tr(R.string.restore), tr(R.string.restore_sub)) { restoreLauncher.launch(arrayOf("application/zip", "application/octet-stream")) }
 
-            Section("Quyền riêng tư")
-            Item("Xóa dữ liệu đăng nhập các trang web", "Cookie và dữ liệu của trình duyệt trong app") {
+            Section(tr(R.string.sec_privacy))
+            Item(tr(R.string.clear_logins), tr(R.string.clear_logins_sub)) {
                 CookieManager.getInstance().removeAllCookies(null)
                 WebStorage.getInstance().deleteAllData()
-                toast("Đã xóa dữ liệu đăng nhập")
+                toast(tr(R.string.logins_cleared))
             }
             Text(
-                "ClipperCast không có tài khoản, không có máy chủ, không dùng quảng cáo hay công cụ theo dõi. " +
-                    "Dữ liệu chỉ rời máy khi app tải trang web bạn lưu, khi bạn dùng giọng đọc cần mạng, hoặc khi bạn tự sao lưu/gửi báo lỗi.",
+                tr(R.string.privacy_note),
                 Modifier.padding(horizontal = 16.dp, vertical = 8.dp), style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
-            Section("Giới thiệu")
-            Item("Phiên bản", BuildConfigInfo.versionName(context)) {}
-            Item("Giấy phép mã nguồn mở và font", "Readability (Apache 2.0), JSoup (MIT), OkHttp (Apache 2.0), Lora, Merriweather, Inter, OpenDyslexic (SIL OFL)") {}
-            Item("Đánh giá trên Google Play", null) {
+            Section(tr(R.string.sec_about))
+            Item(tr(R.string.version), BuildConfigInfo.versionName(context)) {}
+            Item(tr(R.string.licenses), "Readability (Apache 2.0), JSoup (MIT), OkHttp (Apache 2.0), Lora, Merriweather, Inter, OpenDyslexic (SIL OFL)") {}
+            Item(tr(R.string.rate_app), null) {
                 runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=${context.packageName}"))) }
             }
         }
     }
 
     when (pick) {
-        "images" -> Choice("Tải ảnh", listOf("Luôn tải", "Chỉ khi dùng Wi-Fi", "Không tải ảnh"), s.images,
+        "images" -> Choice(tr(R.string.set_images), imageOptions(), s.images,
             onPick = { i -> set { it.copy(images = i) }; pick = null }, onDismiss = { pick = null })
         "autodelete" -> {
             val opts = listOf(0, 30, 90, 180)
-            Choice("Tự xóa bài trong Lưu trữ", opts.map { if (it == 0) "Không bao giờ" else "Sau $it ngày" }, opts.indexOf(s.autoDeleteArchivedDays).coerceAtLeast(0),
+            Choice(tr(R.string.auto_delete), opts.map { if (it == 0) tr(R.string.never) else tr(R.string.after_days, it) }, opts.indexOf(s.autoDeleteArchivedDays).coerceAtLeast(0),
                 onPick = { i -> set { it.copy(autoDeleteArchivedDays = opts[i]) }; pick = null }, onDismiss = { pick = null })
         }
     }
     voiceLang?.let { VoiceDialog(it, s, onDismiss = { voiceLang = null }) }
 }
+
+private fun imageOptions() = listOf(tr(R.string.images_always), tr(R.string.images_wifi), tr(R.string.images_never))
+
+/** Ngôn ngữ cần chọn giọng: ngôn ngữ máy, tiếng Anh, tiếng Việt. */
+private fun voiceLanguages() = listOf(Locale.getDefault().language, "en").distinct()
+
+fun langDisplayName(lang: String): String =
+    Locale(lang).getDisplayLanguage(Locale.getDefault()).replaceFirstChar { it.titlecase(Locale.getDefault()) }
 
 fun formatSize(b: Long): String = when {
     b < 1024 -> "$b B"
@@ -201,5 +212,5 @@ private fun Choice(title: String, options: List<String>, selected: Int, onPick: 
                 }
             }
         }
-    }, confirmButton = { TextButton(onClick = onDismiss) { Text("Đóng") } })
+    }, confirmButton = { TextButton(onClick = onDismiss) { Text(tr(R.string.close)) } })
 }

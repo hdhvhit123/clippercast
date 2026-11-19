@@ -1,5 +1,8 @@
 package com.clippercast.app.ui
 
+import com.clippercast.app.tr
+import com.clippercast.app.R
+
 import android.annotation.SuppressLint
 import android.webkit.CookieManager
 import android.webkit.WebView
@@ -62,8 +65,8 @@ fun BrowserScreen(id: Long, onDone: () -> Unit) {
 
     Scaffold(topBar = {
         TopAppBar(
-            navigationIcon = { IconButton(onClick = onDone) { Icon(Icons.Outlined.Close, "Đóng") } },
-            title = { Text(title.ifBlank { "Đang mở trang…" }, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleSmall) },
+            navigationIcon = { IconButton(onClick = onDone) { Icon(Icons.Outlined.Close, tr(R.string.close)) } },
+            title = { Text(title.ifBlank { tr(R.string.opening_page) }, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleSmall) },
             actions = {
                 Button(enabled = !saving && web != null, onClick = {
                     val w = web ?: return@Button
@@ -74,7 +77,7 @@ fun BrowserScreen(id: Long, onDone: () -> Unit) {
                         scope.launch {
                             if (raw == null || raw.contentHtml.isNullOrBlank()) {
                                 saving = false
-                                Toast.makeText(context, "Không tìm thấy nội dung bài trên trang này", Toast.LENGTH_LONG).show()
+                                Toast.makeText(context, tr(R.string.no_article_on_page), Toast.LENGTH_LONG).show()
                                 return@launch
                             }
                             val fixed = raw.copy(finalUrl = raw.finalUrl.ifBlank { a.url })
@@ -86,11 +89,11 @@ fun BrowserScreen(id: Long, onDone: () -> Unit) {
                                 lang = fin.lang, wordCount = fin.wordCount, excerpt = fin.text.take(200), thumb = fin.thumb,
                                 status = fin.status, error = null, sizeBytes = fin.sizeBytes,
                             ))
-                            Toast.makeText(context, "Đã lưu trang này", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, tr(R.string.page_saved), Toast.LENGTH_SHORT).show()
                             onDone()
                         }
                     }
-                }, modifier = Modifier.padding(end = 8.dp)) { Text(if (saving) "Đang lưu…" else "Lưu trang này") }
+                }, modifier = Modifier.padding(end = 8.dp)) { Text(if (saving) tr(R.string.saving) else tr(R.string.save_this_page)) }
             },
         )
     }) { pad ->

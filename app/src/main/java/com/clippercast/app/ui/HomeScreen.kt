@@ -1,5 +1,8 @@
 package com.clippercast.app.ui
 
+import com.clippercast.app.tr
+import com.clippercast.app.R
+
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
@@ -88,10 +91,12 @@ import com.clippercast.app.player.Playback
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-enum class HomeTab(val label: String, val icon: ImageVector) {
-    INBOX("Hộp thư", Icons.Outlined.Inbox),
-    QUEUE("Hàng chờ nghe", Icons.Outlined.Headphones),
-    ARCHIVE("Lưu trữ", Icons.Outlined.Archive),
+enum class HomeTab(val labelRes: Int, val icon: ImageVector) {
+    INBOX(R.string.tab_inbox, Icons.Outlined.Inbox),
+    QUEUE(R.string.tab_queue, Icons.Outlined.Headphones),
+    ARCHIVE(R.string.tab_archive, Icons.Outlined.Archive);
+
+    val label: String get() = tr(labelRes)
 }
 
 data class HomeNav(
@@ -129,22 +134,22 @@ fun HomeScreen(nav: HomeNav, initialAdd: Boolean = false) {
     fun undoable(message: String, action: suspend () -> Unit, undo: suspend () -> Unit) {
         scope.launch {
             action()
-            val r = snackbar.showSnackbar(message, actionLabel = "Hoàn tác", duration = SnackbarDuration.Short)
+            val r = snackbar.showSnackbar(message, actionLabel = tr(R.string.undo), duration = SnackbarDuration.Short)
             if (r == SnackbarResult.ActionPerformed) undo()
         }
     }
     val actions = ArticleActions(
-        archive = { a -> undoable("Đã chuyển vào Lưu trữ", { repo.setArchived(a.id, true) }, { repo.setArchived(a.id, false) }) },
-        unarchive = { a -> scope.launch { repo.setArchived(a.id, false); snackbar.showSnackbar("Đã đưa về Hộp thư") } },
-        delete = { a -> undoable("Đã chuyển vào Thùng rác", { repo.moveToTrash(a.id) }, { repo.restore(a.id) }) },
+        archive = { a -> undoable(tr(R.string.moved_to_archive), { repo.setArchived(a.id, true) }, { repo.setArchived(a.id, false) }) },
+        unarchive = { a -> scope.launch { repo.setArchived(a.id, false); snackbar.showSnackbar(tr(R.string.moved_to_inbox)) } },
+        delete = { a -> undoable(tr(R.string.moved_to_trash), { repo.moveToTrash(a.id) }, { repo.restore(a.id) }) },
         enqueue = { a ->
             scope.launch {
-                if (!ClipStatus.isReadable(a.status)) { snackbar.showSnackbar("Bài này chưa tải xong nội dung"); return@launch }
-                if (repo.inQueue(a.id)) snackbar.showSnackbar("Bài đã có trong hàng chờ")
-                else { repo.enqueueEnd(a.id); snackbar.showSnackbar("Đã thêm vào hàng chờ nghe") }
+                if (!ClipStatus.isReadable(a.status)) { snackbar.showSnackbar(tr(R.string.not_downloaded_yet)); return@launch }
+                if (repo.inQueue(a.id)) snackbar.showSnackbar(tr(R.string.already_in_queue))
+                else { repo.enqueueEnd(a.id); snackbar.showSnackbar(tr(R.string.added_to_queue)) }
             }
         },
-        playNext = { a -> scope.launch { repo.playNext(a.id, play.article?.id); snackbar.showSnackbar("Sẽ phát tiếp theo") } },
+        playNext = { a -> scope.launch { repo.playNext(a.id, play.article?.id); snackbar.showSnackbar(tr(R.string.will_play_next)) } },
         favorite = { a -> scope.launch { repo.setFavorite(a.id, !a.favorite) } },
         retry = { a -> scope.launch { repo.retry(a.id) } },
         openOriginal = { a -> if (a.url.isNotBlank()) context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(a.url))) },
@@ -158,7 +163,7 @@ fun HomeScreen(nav: HomeNav, initialAdd: Boolean = false) {
         val text = runCatching { cm.primaryClip?.getItemAt(0)?.coerceToText(context)?.toString() }.getOrNull()
         val url = UrlNormalizer.extractUrl(text) ?: return@LaunchedEffect
         if (repo.articles.findByUrl(UrlNormalizer.normalize(url)) != null) return@LaunchedEffect
-        val r = snackbar.showSnackbar("Lưu link vừa sao chép?", actionLabel = "Lưu", duration = SnackbarDuration.Long)
+        val r = snackbar.showSnackbar(tr(R.string.save_copied_link), actionLabel = tr(R.string.save), duration = SnackbarDuration.Long)
         if (r == SnackbarResult.ActionPerformed) repo.saveUrl(url)
     }
 
@@ -167,33 +172,33 @@ fun HomeScreen(nav: HomeNav, initialAdd: Boolean = false) {
             TopAppBar(
                 title = { Text(tab.label) },
                 actions = {
-                    IconButton(onClick = nav.search) { Icon(Icons.Outlined.Search, "Tìm kiếm") }
+                    IconButton(onClick = nav.search) { Icon(Icons.Outlined.Search, tr(R.string.search)) }
                     if (tab == HomeTab.INBOX) {
-                        IconButton(onClick = { sortMenu = true }) { Icon(Icons.AutoMirrored.Outlined.Sort, "Sắp xếp") }
+                        IconButton(onClick = { sortMenu = true }) { Icon(Icons.AutoMirrored.Outlined.Sort, tr(R.string.sort)) }
                         DropdownMenu(sortMenu, onDismissRequest = { sortMenu = false }) {
-                            listOf("Mới lưu nhất", "Cũ nhất", "Ngắn nhất (đọc nhanh)", "Dài nhất", "Theo nguồn").forEachIndexed { i, s ->
+                            listOf(R.string.sort_newest, R.string.sort_oldest, R.string.sort_shortest, R.string.sort_longest, R.string.sort_source).map { tr(it) }.forEachIndexed { i, s ->
                                 DropdownMenuItem(text = { Text((if (settings.sort == i) "✓ " else "    ") + s) }, onClick = {
                                     sortMenu = false; scope.launch { app.settings.update { it.copy(sort = i) } }
                                 })
                             }
                         }
                     }
-                    IconButton(onClick = { menu = true }) { Icon(Icons.Outlined.MoreVert, "Thêm") }
+                    IconButton(onClick = { menu = true }) { Icon(Icons.Outlined.MoreVert, tr(R.string.more)) }
                     DropdownMenu(menu, onDismissRequest = { menu = false }) {
                         DropdownMenuItem(
-                            text = { Text(if (settings.compactList) "Hiển thị dạng tạp chí" else "Hiển thị dạng gọn") },
+                            text = { Text(if (settings.compactList) tr(R.string.view_magazine) else tr(R.string.view_compact)) },
                             leadingIcon = { Icon(Icons.Outlined.ViewAgenda, null) },
                             onClick = { menu = false; scope.launch { app.settings.update { it.copy(compactList = !it.compactList) } } })
-                        DropdownMenuItem(text = { Text("Thùng rác") }, leadingIcon = { Icon(Icons.Outlined.Delete, null) },
+                        DropdownMenuItem(text = { Text(tr(R.string.trash)) }, leadingIcon = { Icon(Icons.Outlined.Delete, null) },
                             onClick = { menu = false; nav.trash() })
-                        DropdownMenuItem(text = { Text("Cài đặt") }, leadingIcon = { Icon(Icons.Outlined.Settings, null) },
+                        DropdownMenuItem(text = { Text(tr(R.string.settings)) }, leadingIcon = { Icon(Icons.Outlined.Settings, null) },
                             onClick = { menu = false; nav.settings() })
                     }
                 },
             )
         },
         floatingActionButton = {
-            if (tab != HomeTab.QUEUE) FloatingActionButton(onClick = { showAdd = true }) { Icon(Icons.Filled.Add, "Thêm bài") }
+            if (tab != HomeTab.QUEUE) FloatingActionButton(onClick = { showAdd = true }) { Icon(Icons.Filled.Add, tr(R.string.add_article)) }
         },
         snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = {
@@ -211,7 +216,7 @@ fun HomeScreen(nav: HomeNav, initialAdd: Boolean = false) {
         Column(Modifier.padding(pad).fillMaxSize()) {
             if (!online) {
                 Text(
-                    "Đang offline. Các bài đã tải vẫn đọc và nghe được bình thường.",
+                    tr(R.string.offline_banner),
                     Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.secondaryContainer).padding(horizontal = 16.dp, vertical = 8.dp),
                     style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSecondaryContainer,
                 )
@@ -219,7 +224,7 @@ fun HomeScreen(nav: HomeNav, initialAdd: Boolean = false) {
             when (tab) {
                 HomeTab.INBOX, HomeTab.ARCHIVE -> {
                     LazyRow(contentPadding = PaddingValues(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        val labels = if (tab == HomeTab.INBOX) listOf("Tất cả", "Yêu thích", "Cần xử lý") else listOf("Tất cả", "Yêu thích")
+                        val labels = if (tab == HomeTab.INBOX) listOf(tr(R.string.all), tr(R.string.favorite), tr(R.string.filter_needs_attention)) else listOf(tr(R.string.all), tr(R.string.favorite))
                         itemsIndexed(labels) { i, l -> FilterChip(selected = filter == i, onClick = { filter = i }, label = { Text(l) }) }
                     }
                     val list = if (tab == HomeTab.INBOX) inbox else archive
@@ -236,7 +241,7 @@ fun HomeScreen(nav: HomeNav, initialAdd: Boolean = false) {
                                 onSample = { scope.launch { val id = SampleArticle.insert(app); nav.openArticle(id) } },
                                 onArchive = { tab = HomeTab.ARCHIVE },
                             )
-                            list.isEmpty() -> EmptyState("🗂️", "Chưa có bài nào", if (filter == 2) "Không có bài nào đang lỗi hoặc chờ tải." else "Danh sách này đang trống.")
+                            list.isEmpty() -> EmptyState("🗂️", tr(R.string.empty_list_title), if (filter == 2) tr(R.string.empty_problems) else tr(R.string.empty_list))
                             else -> LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 96.dp)) {
                                 items(list, key = { it.id }) { a ->
                                     SwipeRow(
@@ -298,9 +303,9 @@ private fun SwipeRow(
         false
     })
     val a11y = listOf(
-        CustomAccessibilityAction(if (archiveTab) "Đưa về Hộp thư" else "Lưu trữ") { if (archiveTab) actions.unarchive(a) else actions.archive(a); true },
-        CustomAccessibilityAction("Thêm vào hàng chờ nghe") { actions.enqueue(a); true },
-        CustomAccessibilityAction("Xóa") { actions.delete(a); true },
+        CustomAccessibilityAction(if (archiveTab) tr(R.string.move_to_inbox) else tr(R.string.archive)) { if (archiveTab) actions.unarchive(a) else actions.archive(a); true },
+        CustomAccessibilityAction(tr(R.string.add_to_queue)) { actions.enqueue(a); true },
+        CustomAccessibilityAction(tr(R.string.delete)) { actions.delete(a); true },
     )
     SwipeToDismissBox(
         state = state,
@@ -308,8 +313,8 @@ private fun SwipeRow(
             val dir = state.dismissDirection
             val (icon, label, align) = when (dir) {
                 SwipeToDismissBoxValue.StartToEnd -> Triple(if (archiveTab) Icons.Outlined.Unarchive else Icons.Outlined.Archive,
-                    if (archiveTab) "Về Hộp thư" else "Lưu trữ", Alignment.CenterStart)
-                else -> Triple(Icons.AutoMirrored.Outlined.PlaylistAdd, "Hàng chờ", Alignment.CenterEnd)
+                    if (archiveTab) tr(R.string.swipe_to_inbox) else tr(R.string.archive), Alignment.CenterStart)
+                else -> Triple(Icons.AutoMirrored.Outlined.PlaylistAdd, tr(R.string.swipe_queue), Alignment.CenterEnd)
             }
             Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.primaryContainer).padding(horizontal = 24.dp), contentAlignment = align) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -328,12 +333,12 @@ private fun SwipeRow(
 private fun InboxEmpty(firstTime: Boolean, onSample: () -> Unit, onArchive: () -> Unit) {
     if (firstTime) {
         EmptyState(
-            "📰", "Chia sẻ bài viết từ Chrome để bắt đầu",
-            "Trong Chrome, bấm Menu ⋮ → Chia sẻ → ClipperCast. Bài sẽ được làm sạch và lưu để đọc, nghe offline.",
-        ) { Button(onClick = onSample) { Text("Thử với bài mẫu") } }
+            "📰", tr(R.string.empty_inbox_title),
+            tr(R.string.empty_inbox_body),
+        ) { Button(onClick = onSample) { Text(tr(R.string.try_sample)) } }
     } else {
-        EmptyState("🎉", "Bạn đã đọc hết!", "Hộp thư trống. Các bài đã đọc nằm trong Lưu trữ.") {
-            OutlinedButton(onClick = onArchive) { Text("Mở Lưu trữ") }
+        EmptyState("🎉", tr(R.string.all_read_title), tr(R.string.all_read_body)) {
+            OutlinedButton(onClick = onArchive) { Text(tr(R.string.open_archive)) }
         }
     }
 }
@@ -344,8 +349,8 @@ private fun QueueList(queue: List<Article>, currentId: Long?, speed: Float, nav:
     val repo = (context.applicationContext as ClipperApp).repo
     val scope = rememberCoroutineScope()
     if (queue.isEmpty()) {
-        EmptyState("🎧", "Hàng chờ nghe đang trống", "Vuốt trái một bài trong Hộp thư để thêm vào hàng chờ.") {
-            Button(onClick = onAddLatest) { Text("Thêm 5 bài mới nhất") }
+        EmptyState("🎧", tr(R.string.queue_empty_title), tr(R.string.queue_empty_body)) {
+            Button(onClick = onAddLatest) { Text(tr(R.string.queue_add_latest)) }
         }
         return
     }
@@ -353,9 +358,9 @@ private fun QueueList(queue: List<Article>, currentId: Long?, speed: Float, nav:
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 24.dp)) {
         item {
             Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("${queue.size} bài · khoảng $totalMin phút nghe", Modifier.weight(1f), style = MaterialTheme.typography.labelLarge)
+                Text(tr(R.string.queue_summary, queue.size, totalMin), Modifier.weight(1f), style = MaterialTheme.typography.labelLarge)
                 Button(onClick = { Playback.play(queue.first().id); nav.openPlayer() }) {
-                    Icon(Icons.Filled.PlayArrow, null); Spacer(Modifier.width(4.dp)); Text("Phát tất cả")
+                    Icon(Icons.Filled.PlayArrow, null); Spacer(Modifier.width(4.dp)); Text(tr(R.string.play_all))
                 }
             }
         }
@@ -365,15 +370,15 @@ private fun QueueList(queue: List<Article>, currentId: Long?, speed: Float, nav:
                 onClick = { nav.listen(a.id) }, onLongClick = { nav.openArticle(a.id) },
                 trailing = {
                     Column(horizontalAlignment = Alignment.End) {
-                        if (a.id == currentId) Text("Đang phát", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                        if (a.id == currentId) Text(tr(R.string.now_playing), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                         Row {
                             IconButton(onClick = { scope.launch { repo.moveInQueue(a.id, -1) } }, enabled = i > 0) {
-                                Icon(Icons.Outlined.KeyboardArrowUp, "Đưa lên")
+                                Icon(Icons.Outlined.KeyboardArrowUp, tr(R.string.move_up))
                             }
                             IconButton(onClick = { scope.launch { repo.moveInQueue(a.id, 1) } }, enabled = i < queue.size - 1) {
-                                Icon(Icons.Outlined.KeyboardArrowDown, "Đưa xuống")
+                                Icon(Icons.Outlined.KeyboardArrowDown, tr(R.string.move_down))
                             }
-                            IconButton(onClick = { scope.launch { repo.dequeue(a.id) } }) { Icon(Icons.Outlined.Close, "Bỏ khỏi hàng chờ") }
+                            IconButton(onClick = { scope.launch { repo.dequeue(a.id) } }) { Icon(Icons.Outlined.Close, tr(R.string.remove_from_queue)) }
                         }
                     }
                 },

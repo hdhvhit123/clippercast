@@ -1,5 +1,8 @@
 package com.clippercast.app.clip
 
+import com.clippercast.app.tr
+import com.clippercast.app.R
+
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -59,12 +62,12 @@ object FastExtractor {
             if (!resp.isSuccessful) throw HttpStatusException(resp.code)
             val finalUrl = resp.request.url.toString()
             val type = resp.header("Content-Type").orEmpty().lowercase()
-            if (type.contains("pdf")) throw NotArticleException("Đây là file PDF, đã lưu dưới dạng link.", null)
+            if (type.contains("pdf")) throw NotArticleException(tr(R.string.err_pdf), null)
             if (type.isNotEmpty() && !type.contains("html") && !type.contains("xml") && !type.contains("text"))
-                throw NotArticleException("Link này không phải trang bài viết.", null)
-            val body = resp.body ?: throw IOException("Trang rỗng")
+                throw NotArticleException(tr(R.string.err_not_article), null)
+            val body = resp.body ?: throw IOException(tr(R.string.err_empty_page))
             val len = body.contentLength()
-            if (len > Http.MAX_PAGE_BYTES) throw NotArticleException("Trang quá lớn để lưu.", null)
+            if (len > Http.MAX_PAGE_BYTES) throw NotArticleException(tr(R.string.err_too_large), null)
             val bytes = body.byteStream().use { it.readNBytesCompat(Http.MAX_PAGE_BYTES.toInt()) }
             val charset = body.contentType()?.charset() ?: Charsets.UTF_8
             val html = String(bytes, charset)

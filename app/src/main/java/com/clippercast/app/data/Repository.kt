@@ -1,5 +1,8 @@
 package com.clippercast.app.data
 
+import com.clippercast.app.tr
+import com.clippercast.app.R
+
 import android.content.Context
 import com.clippercast.app.clip.ClipWorker
 import com.clippercast.app.clip.UrlNormalizer
@@ -47,13 +50,13 @@ class Repository(private val context: Context) {
 
     suspend fun addNote(title: String?, text: String): Long {
         val firstLine = text.lineSequence().firstOrNull { it.isNotBlank() }?.trim().orEmpty()
-        val t = title?.takeIf { it.isNotBlank() } ?: firstLine.take(80).ifBlank { "Ghi chú" }
+        val t = title?.takeIf { it.isNotBlank() } ?: firstLine.take(80).ifBlank { tr(R.string.note) }
         val html = text.split(Regex("\\n\\s*\\n|\\n")).filter { it.isNotBlank() }
             .joinToString("") { "<p>${Entities.escape(it.trim())}</p>" }
         val words = TextUtils.wordCount(text)
         val id = articles.insert(
             Article(
-                url = "", normalizedUrl = "note:${System.nanoTime()}", title = t, siteName = "Ghi chú",
+                url = "", normalizedUrl = "note:${System.nanoTime()}", title = t, siteName = tr(R.string.note),
                 lang = TextUtils.guessLang(text), wordCount = words, excerpt = text.take(200),
                 status = ClipStatus.READY, isNote = true, sizeBytes = html.length * 2L,
             )

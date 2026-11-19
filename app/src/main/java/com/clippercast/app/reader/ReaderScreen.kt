@@ -1,5 +1,8 @@
 package com.clippercast.app.reader
 
+import com.clippercast.app.tr
+import com.clippercast.app.R
+
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
@@ -174,7 +177,7 @@ fun ReaderScreen(id: Long, autoplay: Boolean, onBack: () -> Unit, openPlayer: ()
                 val md = MarkdownExporter.toMarkdown(art, repo.content(art.id).orEmpty())
                 withContext(Dispatchers.IO) { context.contentResolver.openOutputStream(uri)?.use { it.write(md.toByteArray()) } }
             }.isSuccess
-            Toast.makeText(context, if (ok) "Đã xuất file Markdown" else "Không xuất được file", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, if (ok) tr(R.string.md_exported) else tr(R.string.md_export_failed), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -244,51 +247,51 @@ fun ReaderScreen(id: Long, autoplay: Boolean, onBack: () -> Unit, openPlayer: ()
             modifier = Modifier.align(Alignment.TopCenter)) {
             Surface(color = MaterialTheme.colorScheme.surface.copy(alpha = 0.97f), tonalElevation = 2.dp) {
                 Row(Modifier.fillMaxWidth().statusBarsPadding().height(56.dp), verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Quay lại") }
+                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, tr(R.string.back)) }
                     Spacer(Modifier.weight(1f))
                     if (a != null && ClipStatus.isReadable(a.status)) {
-                        IconButton(onClick = { showDisplay = true }) { Icon(Icons.Outlined.FormatSize, "Tùy chỉnh hiển thị") }
+                        IconButton(onClick = { showDisplay = true }) { Icon(Icons.Outlined.FormatSize, tr(R.string.display_options)) }
                         IconButton(onClick = { scope.launch { repo.setFavorite(id, !a.favorite) } }) {
-                            Icon(if (a.favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, if (a.favorite) "Bỏ yêu thích" else "Yêu thích")
+                            Icon(if (a.favorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, if (a.favorite) tr(R.string.unfavorite) else tr(R.string.favorite))
                         }
                         IconButton(onClick = {
                             scope.launch {
                                 repo.setArchived(id, !a.archived)
-                                Toast.makeText(context, if (a.archived) "Đã đưa về Hộp thư" else "Đã lưu trữ", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, if (a.archived) tr(R.string.moved_to_inbox) else tr(R.string.archived), Toast.LENGTH_SHORT).show()
                                 if (!a.archived) onBack()
                             }
-                        }) { Icon(if (a.archived) Icons.Outlined.Unarchive else Icons.Outlined.Archive, if (a.archived) "Đưa về Hộp thư" else "Lưu trữ") }
+                        }) { Icon(if (a.archived) Icons.Outlined.Unarchive else Icons.Outlined.Archive, if (a.archived) tr(R.string.move_to_inbox) else tr(R.string.archive)) }
                     }
-                    IconButton(onClick = { menu = true }) { Icon(Icons.Outlined.MoreVert, "Thêm") }
+                    IconButton(onClick = { menu = true }) { Icon(Icons.Outlined.MoreVert, tr(R.string.more)) }
                     DropdownMenu(menu, onDismissRequest = { menu = false }) {
                         if (a != null && a.url.isNotBlank()) {
-                            DropdownMenuItem(text = { Text("Xem bản gốc") }, onClick = {
+                            DropdownMenuItem(text = { Text(tr(R.string.view_original)) }, onClick = {
                                 menu = false; context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(a.url)))
                             })
-                            DropdownMenuItem(text = { Text("Chia sẻ link") }, onClick = {
+                            DropdownMenuItem(text = { Text(tr(R.string.share_link)) }, onClick = {
                                 menu = false
                                 context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
                                     type = "text/plain"; putExtra(Intent.EXTRA_TEXT, "${a.title}\n${a.url}")
-                                }, "Chia sẻ link"))
+                                }, tr(R.string.share_link)))
                             })
-                            DropdownMenuItem(text = { Text("Mở trong app để đăng nhập rồi lưu lại") }, onClick = { menu = false; openBrowser(id) })
+                            DropdownMenuItem(text = { Text(tr(R.string.open_to_sign_in_again)) }, onClick = { menu = false; openBrowser(id) })
                         }
                         if (a != null && ClipStatus.isReadable(a.status)) {
-                            DropdownMenuItem(text = { Text("Xuất Markdown") }, onClick = {
+                            DropdownMenuItem(text = { Text(tr(R.string.export_md)) }, onClick = {
                                 menu = false; exportLauncher.launch(MarkdownExporter.fileName(a))
                             })
                         }
                         if (a != null && a.url.isNotBlank()) {
-                            DropdownMenuItem(text = { Text("Báo bóc tách sai") }, onClick = {
+                            DropdownMenuItem(text = { Text(tr(R.string.report_extraction)) }, onClick = {
                                 menu = false
                                 context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
                                     type = "text/plain"
-                                    putExtra(Intent.EXTRA_SUBJECT, "ClipperCast: bóc tách sai")
-                                    putExtra(Intent.EXTRA_TEXT, "Trang bị bóc tách sai: ${a.url}\nMô tả lỗi: ")
-                                }, "Gửi báo lỗi"))
+                                    putExtra(Intent.EXTRA_SUBJECT, tr(R.string.report_subject))
+                                    putExtra(Intent.EXTRA_TEXT, tr(R.string.report_body, a.url))
+                                }, tr(R.string.send_report)))
                             })
                         }
-                        DropdownMenuItem(text = { Text("Xóa") }, onClick = {
+                        DropdownMenuItem(text = { Text(tr(R.string.delete)) }, onClick = {
                             menu = false; scope.launch { repo.moveToTrash(id); onBack() }
                         })
                     }
@@ -304,26 +307,26 @@ fun ReaderScreen(id: Long, autoplay: Boolean, onBack: () -> Unit, openPlayer: ()
             ) {
                 Row(Modifier.navigationBarsPadding().padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                     if (isThisPlaying) {
-                        IconButton(onClick = { Playback.seekSentence(-1) }) { Icon(Icons.Outlined.SkipPrevious, "Câu trước") }
+                        IconButton(onClick = { Playback.seekSentence(-1) }) { Icon(Icons.Outlined.SkipPrevious, tr(R.string.prev_sentence)) }
                         IconButton(onClick = { Playback.toggle() }) {
-                            Icon(if (play.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow, if (play.isPlaying) "Tạm dừng" else "Phát")
+                            Icon(if (play.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow, if (play.isPlaying) tr(R.string.pause) else tr(R.string.play))
                         }
-                        IconButton(onClick = { Playback.seekSentence(1) }) { Icon(Icons.Outlined.SkipNext, "Câu sau") }
+                        IconButton(onClick = { Playback.seekSentence(1) }) { Icon(Icons.Outlined.SkipNext, tr(R.string.next_sentence)) }
                         Text(
-                            play.error ?: "Câu ${play.sentenceIndex + 1}/${play.sentenceCount} · ${"%.1f".format(play.speed)}x",
+                            play.error ?: (tr(R.string.sentence_progress, play.sentenceIndex + 1, play.sentenceCount) + " · ${"%.1f".format(play.speed)}x"),
                             Modifier.weight(1f).padding(start = 4.dp), style = MaterialTheme.typography.labelLarge,
                             maxLines = 2, overflow = TextOverflow.Ellipsis,
                             color = if (play.error != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface,
                         )
-                        TextButton(onClick = openPlayer) { Text("Trình phát") }
+                        TextButton(onClick = openPlayer) { Text(tr(R.string.player)) }
                     } else {
                         FilledTonalButton(onClick = { Playback.play(id, 0) }) {
-                            Icon(Icons.Outlined.Headphones, null); Spacer(Modifier.width(6.dp)); Text("Nghe từ đầu")
+                            Icon(Icons.Outlined.Headphones, null); Spacer(Modifier.width(6.dp)); Text(tr(R.string.listen_from_start))
                         }
                         Spacer(Modifier.width(8.dp))
                         OutlinedButton(onClick = {
                             webView?.evaluateJavascript("firstVisibleSentence()") { r -> r?.toIntOrNull()?.let { Playback.play(id, it) } }
-                        }) { Text("Nghe từ đây") }
+                        }) { Text(tr(R.string.listen_from_here)) }
                     }
                 }
             }
@@ -342,15 +345,15 @@ private fun NotReady(a: Article, onRetry: () -> Unit, onBrowser: () -> Unit, onP
         when (a.status) {
             ClipStatus.PENDING, ClipStatus.LOADING -> {
                 CircularProgressIndicator()
-                Text(a.error ?: "Đang tải và làm sạch bài viết…", textAlign = TextAlign.Center)
+                Text(a.error ?: tr(R.string.downloading_article), textAlign = TextAlign.Center)
             }
             else -> {
-                Text(a.error ?: "Chưa lấy được nội dung bài viết.", textAlign = TextAlign.Center,
+                Text(a.error ?: tr(R.string.no_content_yet), textAlign = TextAlign.Center,
                     color = if (a.status == ClipStatus.FAILED) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant)
-                if (a.status == ClipStatus.FAILED) Button(onClick = onRetry) { Text("Thử lại") }
-                if (a.url.isNotBlank()) OutlinedButton(onClick = onBrowser) { Text("Mở trong app để đăng nhập rồi lưu") }
-                OutlinedButton(onClick = onPaste) { Text("Dán văn bản thủ công") }
-                if (a.url.isNotBlank()) TextButton(onClick = onOriginal) { Text("Xem bản gốc") }
+                if (a.status == ClipStatus.FAILED) Button(onClick = onRetry) { Text(tr(R.string.retry)) }
+                if (a.url.isNotBlank()) OutlinedButton(onClick = onBrowser) { Text(tr(R.string.open_to_sign_in)) }
+                OutlinedButton(onClick = onPaste) { Text(tr(R.string.paste_text_manually)) }
+                if (a.url.isNotBlank()) TextButton(onClick = onOriginal) { Text(tr(R.string.view_original)) }
             }
         }
     }

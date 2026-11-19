@@ -1,5 +1,8 @@
 package com.clippercast.app.ui
 
+import com.clippercast.app.tr
+import com.clippercast.app.R
+
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -52,24 +55,24 @@ fun SearchScreen(onBack: () -> Unit, openArticle: (Long) -> Unit) {
     val results by flow.collectAsState(initial = emptyList())
     Scaffold(topBar = {
         TopAppBar(
-            navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Quay lại") } },
+            navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, tr(R.string.back)) } },
             title = {
                 TextField(
-                    q, { q = it }, placeholder = { Text("Tìm trong tiêu đề và nội dung…") }, singleLine = true,
+                    q, { q = it }, placeholder = { Text(tr(R.string.search_hint)) }, singleLine = true,
                     modifier = Modifier.focusRequester(focus),
                     colors = TextFieldDefaults.colors(focusedContainerColor = Color.Transparent, unfocusedContainerColor = Color.Transparent,
                         focusedIndicatorColor = Color.Transparent, unfocusedIndicatorColor = Color.Transparent),
                 )
             },
-            actions = { if (q.isNotEmpty()) IconButton(onClick = { q = "" }) { Icon(Icons.Outlined.Close, "Xóa") } },
+            actions = { if (q.isNotEmpty()) IconButton(onClick = { q = "" }) { Icon(Icons.Outlined.Close, tr(R.string.clear)) } },
         )
     }) { pad ->
         Column(Modifier.padding(pad).fillMaxSize()) {
             when {
-                q.isBlank() -> EmptyState("🔎", "Tìm trong thư viện", "Gõ không dấu vẫn tìm được: \"kinh te\" sẽ ra \"kinh tế\".")
-                results.isEmpty() -> EmptyState("🤔", "Không tìm thấy \"$q\"", "Thử từ khóa khác ngắn hơn.")
+                q.isBlank() -> EmptyState("🔎", tr(R.string.search_title), tr(R.string.search_body))
+                results.isEmpty() -> EmptyState("🤔", tr(R.string.search_none, q), tr(R.string.search_none_body))
                 else -> LazyColumn {
-                    item { Text("${results.size} kết quả", Modifier.padding(16.dp), style = MaterialTheme.typography.labelLarge) }
+                    item { Text(tr(R.string.search_count, results.size), Modifier.padding(16.dp), style = MaterialTheme.typography.labelLarge) }
                     items(results, key = { it.id }) { a ->
                         ArticleCard(a, compact = true, speed = 1f, onClick = { openArticle(a.id) }, onLongClick = { openArticle(a.id) })
                         HorizontalDivider(Modifier.padding(horizontal = 16.dp))

@@ -28,6 +28,12 @@ Cần Android Studio (hoặc JDK 17 + Android SDK 35):
 | `ui/` | Compose: Hộp thư, Hàng chờ nghe, Lưu trữ, Tìm kiếm, Cài đặt, Onboarding, Thùng rác, trình duyệt trong app |
 | `backup/` | Sao lưu/khôi phục ZIP, xuất Markdown |
 
+## Ngôn ngữ
+
+Giao diện tự hiển thị theo ngôn ngữ của máy: Anh (mặc định), Việt, Tây Ban Nha, Bồ Đào Nha, Pháp, Đức, Nga, Indonesia, Nhật, Hàn, Trung giản thể, Thái, Hindi, Ả Rập (bố cục phải sang trái). Trên Android 13+, có thể chọn ngôn ngữ riêng cho app trong Cài đặt → Ứng dụng → ClipperCast → Ngôn ngữ.
+
+Chuỗi gốc nằm ở `app/src/main/res/values/strings.xml`; mỗi ngôn ngữ một thư mục `values-xx/`. Giọng đọc chọn theo ngôn ngữ của từng bài (đọc từ thẻ `lang` của trang, nếu không có thì đoán theo hệ chữ).
+
 ## Chưa làm trong bản này
 
-Gói Pro và Google Play Billing, nhập từ Pocket/Instapaper, highlight và ghi chú, widget, Android Auto, giao diện tiếng Anh. Xem lộ trình ở mục 9 của đặc tả.
+Gói Pro và Google Play Billing, nhập từ Pocket/Instapaper, highlight và ghi chú, widget, Android Auto. Xem lộ trình ở mục 9 của đặc tả.
